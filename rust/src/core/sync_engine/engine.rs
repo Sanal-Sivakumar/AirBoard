@@ -37,17 +37,21 @@ impl SyncEngine {
         true
     }
 
-    pub fn process_local_change(&self, content: &str) -> (bool, String) {
+    pub fn process_local_change(&self, content: &str) -> (bool, String, i64) {
         let local_hash = compute_hash(content);
         let mut last_hash = self.last_synced_hash.lock().unwrap();
 
         if local_hash == *last_hash {
-            return (false, String::new());
+            return (false, String::new(), 0);
         }
 
         *last_hash = local_hash;
         
         let packet_id = uuid::Uuid::new_v4().to_string();
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as i64;
         
         let mut cache = self.processed_packet_ids.lock().unwrap();
         cache.push(packet_id.clone());
@@ -55,7 +59,7 @@ impl SyncEngine {
             cache.remove(0);
         }
 
-        (true, packet_id)
+        (true, packet_id, now)
     }
 }
 

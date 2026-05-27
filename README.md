@@ -1,93 +1,84 @@
-# SyncBoard - Peer-to-Peer Local Network Clipboard Sync (Flutter + Rust)
+# SyncBoard - Secure End-to-End Encrypted Clipboard Sync (Flutter + Rust)
 
-SyncBoard is a high-performance, low-latency, plain text clipboard synchronization system operating in a decentralized, Peer-to-Peer (P2P) network mesh. It auto-discovers and synchronizes clipboards between Linux desktops and Android devices connected on the same local network (WiFi or Hotspot).
+SyncBoard is a highly secure, local-network Peer-to-Peer (P2P) clipboard synchronization system. It features automatic local network device discovery, secure manual device pairing, and end-to-end (E2E) payload encryption.
 
 ---
 
-## 1. P2P Architecture Details
+## 1. Security Architecture
 
-SyncBoard implements a fully decentralized mesh topology:
+SyncBoard utilizes a trusted-device model to ensure clipboard contents are never leaked or intercepted:
 
-1. **UDP Discovery (Port 45454)**:
-   - Every active device broadcasts a UDP packet announcing its `device_name`, `device_id`, and `ws_port` every 5 seconds to `255.255.255.255:45454`.
-   - At the same time, each device listens on `0.0.0.0:45454` for announcements from other peers to register them in its Connection Registry.
+1. **Cryptographic Identity**:
+   - Each device generates a permanent UUID and two keypairs on its first startup:
+     - **Ed25519** keypair for connection handshakes and payload signatures.
+     - **X25519** keypair for ephemeral Diffie-Hellman session key exchanges.
+   - Keys are stored securely on the host platform using the Android Keystore (Android) and Linux Keyring/Keychain (Linux) via `flutter_secure_storage`.
 
-2. **WebSocket Core (Port 45455 / Ephemeral)**:
-   - Each device hosts its own WebSocket server (spawning on `45455` or next free port).
-   - Once a peer is discovered, the device initiates a client connection to the peer's WebSocket server *if and only if* its own `device_id` is alphabetically smaller than the peer's `device_id` (tie-breaking mechanism).
-   - This prevents duplicate socket connections and ensures a single stable link.
+2. **Manual Device Pairing Flow**:
+   - Discovered devices are initially flagged as **Unpaired**.
+   - Initiating pairing opens a temporary connection to exchange public keys and display a visual SHA-256 fingerprint (`SHA256(public_signing_key)`) on both screens.
+   - Once approved by the recipient, public keys are persisted permanently in `trust_store.json`.
 
-3. **Routing & Loop Prevention**:
-   - Every clipboard update is packaged with a unique `packet_id` (UUID) and `origin_device_id`.
-   - When a peer receives an update, it checks its local sliding-window cache of the last 100 packet IDs.
-   - If the packet is new, it updates the system clipboard, logs the event, and floods (forwards) the packet to all other connected peers (excluding the sender).
-   - If the packet was already processed, it is silently dropped.
+3. **Authenticated Session Handshake (Station-to-Station)**:
+   - When connecting, trusted peers exchange signed ephemeral X25519 public keys (`Handshake1` and `Handshake2`).
+   - Signature checks verify that both devices own the private keys corresponding to their paired public keys.
+   - A shared session key is derived via Diffie-Hellman, hashed using SHA-256, and used to encrypt all data traffic.
 
-4. **Heartbeats & Dead Peer Detection**:
-   - Heartbeat packets are exchanged every 10 seconds.
-   - If a peer fails to send a UDP announcement or a WebSocket heartbeat for more than 30 seconds, it is marked as `Disconnected`, connection sockets are pruned, and the registry is updated.
+4. **Payload Encryption**:
+   - All clipboard contents and heartbeats are encrypted using **ChaCha20-Poly1305** authenticated symmetric encryption.
+   - Sockets transmit only encrypted envelopes:
+     ```json
+     {
+       "type": "encrypted_payload",
+       "sender": "sender-device-id",
+       "nonce": "base64-nonce",
+       "ciphertext": "base64-ciphertext"
+     }
+     ```
+   - When a peer forwards a clipboard update to other mesh nodes, it decrypts it, validates it, and re-encrypts it using the specific session key of each destination peer. Plaintext is never forwarded or exposed.
 
 ---
 
 ## 2. Installation & Prerequisites
 
 ### Linux Dependencies
-Compile tools and X11/xcb headers are required to build on Linux:
+Install standard compilation headers for Linux:
 ```bash
 sudo apt-get update
 sudo apt-get install -y build-essential pkg-config libx11-dev libxcb1-dev
 ```
 
-### Rust and Targets
-Configure compilation targets for both local desktop and Android architectures:
-```bash
-# Install Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-source "$HOME/.cargo/env"
+### Rust Cryptography Crates
+SyncBoard uses high-performance, compilation-friendly, pure-Rust cryptographic backends:
+- `chacha20poly1305`
+- `ed25519-dalek`
+- `x25519-dalek`
+- `rand`
+- `base64`
 
-# Add Android targets
-rustup target add aarch64-linux-android      # Modern physical Android devices
-rustup target add x86_64-linux-android       # Android Studio Emulator
-```
-
-### CLI Code Generator
+Configure targets for compilation:
 ```bash
-cargo install flutter_rust_bridge_codegen --version 2.0.0
+rustup target add aarch64-linux-android
+rustup target add x86_64-linux-android
 ```
 
 ---
 
-## 3. How to Build & Run
+## 3. Running & Testing
 
 1. **Perform Code Generation**:
-   Generate Dart/Rust serialization glue by running the command in the root folder:
    ```bash
    flutter_rust_bridge_codegen generate
    ```
 
-2. **Run on Linux**:
-   ```bash
-   flutter run -d linux
-   ```
+2. **Run the Apps**:
+   - On Linux: `flutter run -d linux`
+   - On Android: `flutter run -d android`
 
-3. **Run on Android**:
-   ```bash
-   flutter run -d android
-   ```
-
----
-
-## 4. Hotspot Compatibility & Troubleshooting
-
-SyncBoard is designed to work reliably on standard LAN routers as well as Android Hotspots:
-
-- **Android Hotspot Mode**:
-  - Turn on hotspot on Android and connect your Linux desktop to it.
-  - Due to security restrictions on some mobile operating systems, UDP broadcasts from the Linux client to the Android hotspot might be filtered at the interface level, but **broadcasts from the Android hotspot (host) to connected clients are fully forwarded**.
-  - As soon as the Linux client receives the Android device's broadcast, it registers the Android IP and establishes the WebSocket connection.
-- **Firewall Warnings**:
-  - Ensure your Linux firewall (e.g. `ufw`) allows UDP packets on port `45454` and TCP packets on port `45455`:
-    ```bash
-    sudo ufw allow 45454/udp
-    sudo ufw allow 45455/tcp
-    ```
+3. **Security Testing Steps**:
+   - **Step 1 (Discovery)**: Enable sync on both devices. Verify they show up in each other's "Devices" list as unpaired.
+   - **Step 2 (Clipboard Isolation)**: Copy text on Device A. Verify that Device B does **NOT** receive the text (since they are unpaired).
+   - **Step 3 (Pairing)**: Tap "Pair Device" on Device A. Verify a modal dialog pops up on B displaying A's device name and fingerprint.
+   - **Step 4 (Fingerprint Check)**: Match B's prompt fingerprint against A's header fingerprint. Tap **Approve** on B.
+   - **Step 5 (Encrypted Sync)**: Verify both devices list each other in "Trusted Peers" and establish a "Secure session". Copy text on A and verify B's clipboard updates instantly.
+   - **Step 6 (Unpairing)**: Go to "Trusted Peers" tab on B and tap the delete button. Confirm unpairing. Copy text on A and verify B does not receive it anymore.

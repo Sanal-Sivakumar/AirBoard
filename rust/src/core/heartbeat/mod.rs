@@ -1,5 +1,5 @@
 use tokio::time::{sleep, Duration};
-use crate::core::peer_manager::{ACTIVE_PEERS, Message};
+use crate::core::peer_manager::{send_heartbeats, ACTIVE_PEERS};
 use crate::core::connection_registry::{prune_inactive_peers, update_connection_status};
 use crate::core::sync_engine::engine::{emit_event, SyncEvent};
 
@@ -7,20 +7,10 @@ pub async fn start_heartbeat_loop() {
     loop {
         sleep(Duration::from_secs(10)).await;
 
-        {
-            let peers = ACTIVE_PEERS.lock().unwrap();
-            let heartbeat_msg = Message::Heartbeat {
-                timestamp: std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_secs() as i64,
-            };
+        // Broadcast encrypted heartbeats
+        send_heartbeats();
 
-            for (_, tx) in peers.iter() {
-                let _ = tx.send(heartbeat_msg.clone());
-            }
-        }
-
+        // Prune inactive peers (unresponsive for more than 30 seconds)
         let pruned = prune_inactive_peers(30);
         for id in pruned {
             {

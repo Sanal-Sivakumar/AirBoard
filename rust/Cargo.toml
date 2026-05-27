@@ -17,3 +17,8 @@ sha2 = "0.10"
 uuid = { version = "1.7", features = ["v4"] }
 futures-util = "0.3"
 once_cell = "1.19"
+chacha20poly1305 = "0.10"
+x25519-dalek = { version = "2.0", features = ["static_secrets"] }
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+rand = "0.8"
+base64 = "0.21"

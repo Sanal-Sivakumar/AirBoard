@@ -15,7 +15,7 @@ pub struct DeviceAnnouncement {
     pub ws_port: u16,
 }
 
-pub async fn start_udp_announcer(device_name: String, is_android: bool, ws_port: u16) {
+pub async fn start_udp_announcer(device_name: String, platform: String, ws_port: u16) {
     let socket = match UdpSocket::bind("0.0.0.0:0").await {
         Ok(s) => s,
         Err(e) => {
@@ -30,7 +30,6 @@ pub async fn start_udp_announcer(device_name: String, is_android: bool, ws_port:
     }
 
     let broadcast_addr: SocketAddr = "255.255.255.255:45454".parse().unwrap();
-    let platform = if is_android { "android" } else { "linux" }.to_string();
     let local_device_id = SYNC_ENGINE.device_id.clone();
 
     loop {
