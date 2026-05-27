@@ -9,6 +9,7 @@ use tokio_tungstenite::accept_async;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+use sha2::Digest;
 
 use crate::core::connection_registry::{update_connection_status, add_or_update_peer};
 use crate::core::sync_engine::engine::{SYNC_ENGINE, emit_event, SyncEvent};
@@ -361,11 +362,14 @@ pub async fn connect_to_peer(peer_id: String, ip: String, port: u16) {
     }
 }
 
-async fn manage_connection_loops(
+async fn manage_connection_loops<S>(
     peer_device_id: String,
-    mut ws_write: futures_util::stream::SplitSink<tokio_tungstenite::WebSocketStream<TcpStream>, WsMessage>,
-    mut ws_read: futures_util::stream::SplitStream<tokio_tungstenite::WebSocketStream<TcpStream>>,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    mut ws_write: futures_util::stream::SplitSink<tokio_tungstenite::WebSocketStream<S>, WsMessage>,
+    mut ws_read: futures_util::stream::SplitStream<tokio_tungstenite::WebSocketStream<S>>,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>>
+where
+    S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static,
+{
     let (tx, mut rx) = mpsc::unbounded_channel::<WsMessage>();
 
     if !register_peer(peer_device_id.clone(), tx.clone()) {

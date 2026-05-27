@@ -68,7 +68,7 @@ pub static SYNC_ENGINE: Lazy<SyncEngine> = Lazy::new(|| {
     SyncEngine::new(device_id)
 });
 
-pub static EVENT_SINK: Lazy<Mutex<Option<flutter_rust_bridge::StreamSink<SyncEvent>>>> = Lazy::new(|| Mutex::new(None));
+pub static EVENT_SINK: Lazy<Mutex<Option<crate::StreamSink<SyncEvent>>>> = Lazy::new(|| Mutex::new(None));
 
 pub fn emit_event(event: SyncEvent) {
     if let Some(sink) = EVENT_SINK.lock().unwrap().as_ref() {

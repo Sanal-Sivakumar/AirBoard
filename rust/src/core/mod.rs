@@ -9,7 +9,6 @@ pub mod peer_manager;
 pub mod heartbeat;
 pub mod reconnect;
 
-pub mod networking;
 pub mod crypto;
 pub mod trust_store;
 pub mod pairing;

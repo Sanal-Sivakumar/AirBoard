@@ -9,7 +9,7 @@ use crate::core::crypto::register_identity_keys;
 use crate::core::trust_store::{init_trust_store, get_all_trusted_devices, remove_trusted_device};
 use crate::core::pairing::{initiate_pairing_flow, respond_to_pairing, compute_fingerprint};
 use crate::core::connection_registry::REGISTRY;
-use flutter_rust_bridge::StreamSink;
+use crate::StreamSink;
 use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
