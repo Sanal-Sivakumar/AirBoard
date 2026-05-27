@@ -1,0 +1,7 @@
+# flutter_rust_bridge configuration file
+# For more info see: https://fzyzcjy.github.io/flutter_rust_bridge/
+
+rust_input: "rust/src/api/mod.rs"
+dart_output: "lib/src/rust"
+rust_output: "rust/src/frb_generated.rs"
+dart_decl_output: "lib/src/rust/api"
