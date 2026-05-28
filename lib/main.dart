@@ -131,6 +131,9 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
         api.handleAppForeground();
       }
       _startIosClipboardPoller();
+      if (Platform.isAndroid) {
+        _startAndroidClipboardPoller();
+      }
 
       if (_pendingClipboardWrite != null) {
         final text = _pendingClipboardWrite!;
@@ -146,6 +149,9 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
         api.handleAppBackground();
       }
       _iosClipboardTimer?.cancel();
+      if (Platform.isAndroid) {
+        _androidClipboardTimer?.cancel();
+      }
     }
   }
 
@@ -299,9 +305,12 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
             _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
           });
         } else {
-          if (Platform.isAndroid && _lifecycleState != "resumed") {
+          if (Platform.isAndroid && _lifecycleState.toLowerCase() != "resumed") {
             _pendingClipboardWrite = text;
-            _log("Buffered background clipboard sync (will apply on app open): '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
+            _log("Buffered background clipboard sync: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
+            _serviceChannel.invokeMethod('showSyncNotification', {'text': text}).catchError((e) {
+              _log("Failed to show notification: $e");
+            });
             setState(() {
               _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
             });
@@ -315,6 +324,9 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
               if (Platform.isAndroid) {
                 _pendingClipboardWrite = text;
                 _log("Clipboard write blocked by OS in background, buffered sync instead.");
+                _serviceChannel.invokeMethod('showSyncNotification', {'text': text}).catchError((err) {
+                  _log("Failed to show notification: $err");
+                });
               } else {
                 _log("Failed to write to clipboard: $e");
               }
@@ -556,18 +568,21 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
     _androidClipboardTimer?.cancel();
     _androidClipboardTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) async {
       if (!_isSyncEnabled) return;
+      try {
+        final clipData = await Clipboard.getData(Clipboard.kTextPlain);
+        final text = clipData?.text;
 
-      final clipData = await Clipboard.getData(Clipboard.kTextPlain);
-      final text = clipData?.text;
-
-      if (text != null && text.isNotEmpty && text != _lastClipboardText) {
-        _lastClipboardText = text;
-        _log("Local clip changed: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
-        try {
-          await api.sendLocalClipboardUpdate(content: text);
-        } catch (e) {
-          _log("Clipboard broadcast error: $e");
+        if (text != null && text.isNotEmpty && text != _lastClipboardText) {
+          _lastClipboardText = text;
+          _log("Local clip changed: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
+          try {
+            await api.sendLocalClipboardUpdate(content: text);
+          } catch (e) {
+            _log("Clipboard broadcast error: $e");
+          }
         }
+      } catch (e) {
+        debugPrint("Android Clipboard poll error: $e");
       }
     });
   }

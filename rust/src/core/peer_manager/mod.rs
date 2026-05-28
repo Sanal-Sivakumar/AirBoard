@@ -431,6 +431,26 @@ where
                                             #[cfg(target_os = "linux")]
                                             write_to_linux_clipboard(content.clone());
 
+                                            #[cfg(target_os = "android")]
+                                            {
+                                                let content_clone = content.clone();
+                                                tokio::spawn(async move {
+                                                    match tokio::net::TcpStream::connect("127.0.0.1:45456").await {
+                                                        Ok(mut stream) => {
+                                                            use tokio::io::AsyncWriteExt;
+                                                            if let Err(e) = stream.write_all(content_clone.as_bytes()).await {
+                                                                println!("Rust local socket: write error: {:?}", e);
+                                                            } else {
+                                                                println!("Rust local socket: successfully notified local service");
+                                                            }
+                                                        }
+                                                        Err(e) => {
+                                                            println!("Rust local socket: connection failed: {:?}", e);
+                                                        }
+                                                    }
+                                                });
+                                            }
+
                                             emit_event(SyncEvent::ClipboardUpdated { content: content.clone() });
 
                                             // Re-encrypt and forward to other trusted devices

@@ -33,6 +33,14 @@
             android:enabled="true"
             android:exported="false"/>
 
+        <activity
+            android:name=".ClipboardWriteActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity="" />
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

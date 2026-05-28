@@ -22,6 +22,13 @@ class MainActivity : FlutterActivity() {
                     stopSyncService()
                     result.success(null)
                 }
+                "showSyncNotification" -> {
+                    val text = call.argument<String>("text")
+                    if (text != null) {
+                        showSyncNotification(text)
+                    }
+                    result.success(null)
+                }
                 else -> {
                     result.notImplemented()
                 }
@@ -41,5 +48,17 @@ class MainActivity : FlutterActivity() {
     private fun stopSyncService() {
         val intent = Intent(this, ClipboardSyncService::class.java)
         stopService(intent)
+    }
+
+    private fun showSyncNotification(text: String) {
+        val intent = Intent(this, ClipboardSyncService::class.java).apply {
+            action = ClipboardSyncService.ACTION_UPDATE_NOTIFICATION
+            putExtra(ClipboardSyncService.EXTRA_TEXT, text)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
     }
 }

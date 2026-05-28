@@ -28,9 +28,15 @@ pub fn add_or_update_peer(
     let mut registry = REGISTRY.lock().unwrap();
     if let Some(peer) = registry.get_mut(&device_id) {
         peer.last_seen = now;
-        peer.ip_address = ip_address;
-        peer.ws_port = ws_port;
-        // Don't overwrite active connection status
+        if !ip_address.is_empty() {
+            peer.ip_address = ip_address;
+        }
+        if ws_port > 0 {
+            peer.ws_port = ws_port;
+        }
+        if !device_name.is_empty() {
+            peer.device_name = device_name;
+        }
     } else {
         registry.insert(
             device_id.clone(),
