@@ -37,7 +37,7 @@ class ClipboardSyncApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SyncBoard Secure P2P',
+      title: 'AirBoard Secure P2P',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF0F172A), // Slate 900
@@ -607,33 +607,50 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Text(
-                          'SyncBoard E2EE',
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1.0,
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            'assets/logo.png',
+                            width: 46,
+                            height: 46,
+                            fit: BoxFit.cover,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(Icons.fingerprint, size: 14, color: Slate.c400),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                _myFingerprint.substring(0, min(_myFingerprint.length, 24)) + '...',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Slate.c400,
-                                  fontFamily: 'monospace',
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'AirBoard',
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -1.0,
+                                  fontSize: 22,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.fingerprint, size: 14, color: Slate.c400),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      _myFingerprint.substring(0, min(_myFingerprint.length, 24)) + '...',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Slate.c400,
+                                        fontFamily: 'monospace',
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
