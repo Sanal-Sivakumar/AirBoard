@@ -7,6 +7,7 @@
 // ignore_for_file: argument_type_not_assignable
 
 import 'api.dart';
+import 'api/simple.dart';
 import 'core/connection_registry.dart';
 import 'core/sync_engine/engine.dart';
 import 'dart:async';

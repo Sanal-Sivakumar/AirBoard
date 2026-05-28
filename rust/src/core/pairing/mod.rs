@@ -55,6 +55,7 @@ pub fn compute_fingerprint(pub_signing_key_bytes: &[u8]) -> String {
 
 pub async fn initiate_pairing_flow(peer_id: String, ip: String, port: u16) {
     let url = format!("ws://{}:{}", ip, port);
+    println!("Rust Pairing: initiate_pairing_flow starting for {}", url);
     emit_event(SyncEvent::ConnectionStatus {
         connected: false,
         message: format!("Initiating pairing request to {}...", url),
@@ -62,10 +63,12 @@ pub async fn initiate_pairing_flow(peer_id: String, ip: String, port: u16) {
 
     match connect_async(&url).await {
         Ok((ws_stream, _)) => {
+            println!("Rust Pairing: connected successfully to {}", url);
             let (mut ws_write, mut ws_read) = ws_stream.split();
             
             // 1. Send PairingRequest
             let Some((pub_sig, pub_dh)) = get_my_public_keys() else {
+                println!("Rust Pairing Error: Keys not registered!");
                 emit_event(SyncEvent::Error { message: "Keys not registered".to_string() });
                 return;
             };
@@ -78,16 +81,21 @@ pub async fn initiate_pairing_flow(peer_id: String, ip: String, port: u16) {
             };
 
             if let Ok(req_str) = serde_json::to_string(&req) {
+                println!("Rust Pairing: sending pairing request payload to {}", url);
                 if ws_write.send(WsMessage::Text(req_str)).await.is_err() {
+                    println!("Rust Pairing Error: Failed to write payload to WebSocket!");
                     emit_event(SyncEvent::Error { message: "Failed to send pairing request".to_string() });
                     return;
                 }
             }
 
             // 2. Await Response
+            println!("Rust Pairing: awaiting pairing response from {}", url);
             match ws_read.next().await {
                 Some(Ok(WsMessage::Text(text))) => {
+                    println!("Rust Pairing: received response string: {}", text);
                     if let Ok(PairingMessage::PairingResponse { status, device_id, device_name, public_signing_key, public_dh_key }) = serde_json::from_str::<PairingMessage>(&text) {
+                        println!("Rust Pairing: parsed response status: '{}' from '{}'", status, device_name);
                         if status == "approved" {
                             let Ok(sig_bytes) = BASE64.decode(public_signing_key) else { return; };
                             let Ok(dh_bytes) = BASE64.decode(public_dh_key) else { return; };
@@ -114,12 +122,22 @@ pub async fn initiate_pairing_flow(peer_id: String, ip: String, port: u16) {
                         }
                     }
                 }
-                _ => {
+                Some(Ok(other)) => {
+                    println!("Rust Pairing Error: Received non-text message: {:?}", other);
+                    emit_event(SyncEvent::Error { message: "Pairing aborted by remote peer".to_string() });
+                }
+                Some(Err(e)) => {
+                    println!("Rust Pairing Error: WebSocket read error: {}", e);
+                    emit_event(SyncEvent::Error { message: "Pairing aborted by remote peer".to_string() });
+                }
+                None => {
+                    println!("Rust Pairing Error: Connection closed by remote peer while awaiting response!");
                     emit_event(SyncEvent::Error { message: "Pairing aborted by remote peer".to_string() });
                 }
             }
         }
         Err(e) => {
+            println!("Rust Pairing Error: Connection to {} failed: {}", url, e);
             emit_event(SyncEvent::Error { message: format!("Connection failed: {}", e) });
         }
     }

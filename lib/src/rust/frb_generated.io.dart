@@ -4,6 +4,7 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api.dart';
+import 'api/simple.dart';
 import 'core/connection_registry.dart';
 import 'core/sync_engine/engine.dart';
 import 'dart:async';

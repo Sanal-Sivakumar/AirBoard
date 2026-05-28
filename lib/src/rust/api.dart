@@ -20,9 +20,13 @@ Future<List<String>> registerKeys(
 Future<void> startSync(
         {required String storageDir,
         required String deviceName,
-        required String platform}) =>
+        required String platform,
+        required String deviceId}) =>
     RustLib.instance.api.crateApiStartSync(
-        storageDir: storageDir, deviceName: deviceName, platform: platform);
+        storageDir: storageDir,
+        deviceName: deviceName,
+        platform: platform,
+        deviceId: deviceId);
 
 Future<void> handleAppForeground() =>
     RustLib.instance.api.crateApiHandleAppForeground();

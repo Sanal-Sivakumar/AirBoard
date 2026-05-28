@@ -13,6 +13,7 @@ use sha2::Digest;
 
 use crate::core::connection_registry::{update_connection_status, add_or_update_peer};
 use crate::core::sync_engine::engine::{SYNC_ENGINE, emit_event, SyncEvent};
+#[cfg(target_os = "linux")]
 use crate::core::clipboard::linux::write_to_linux_clipboard;
 use crate::core::crypto::{sign_message, verify_message_signature, compute_shared_secret, chacha_encrypt, chacha_decrypt, get_my_public_keys};
 use crate::core::trust_store::{is_device_trusted, get_trusted_device};
@@ -179,15 +180,21 @@ pub async fn start_p2p_server(port: u16) -> Result<u16, Box<dyn std::error::Erro
 }
 
 async fn handle_incoming_connection(stream: TcpStream, ip_address: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    println!("Rust Server: handle_incoming_connection called for incoming TCP connection from {}", ip_address);
     let ws_stream = accept_async(stream).await?;
+    println!("Rust Server: WebSocket connection accepted from {}", ip_address);
     let (mut ws_write, mut ws_read) = ws_stream.split();
 
     // Read the first message. It determines whether this is a pairing request or a trusted handshake.
     let client_device_id = match ws_read.next().await {
         Some(Ok(WsMessage::Text(text))) => {
+            println!("Rust Server: received first message payload: {}", text);
             if text.contains("pairing_request") {
+                println!("Rust Server: payload matches pairing_request. Starting pairing flow.");
                 if let Ok(PairingMessage::PairingRequest { device_id, device_name, public_signing_key, public_dh_key }) = serde_json::from_str::<PairingMessage>(&text) {
                     handle_pairing_flow(ws_write, device_id, device_name, public_signing_key, public_dh_key).await?;
+                } else {
+                    println!("Rust Server Error: Failed to parse PairingRequest JSON!");
                 }
                 return Ok(());
             } else if text.contains("handshake_1") {

@@ -1,9 +1,12 @@
+pub mod simple;
+
 use crate::core::sync_engine::engine::{SyncEvent, EVENT_SINK, SYNC_ENGINE};
 use crate::core::connection_registry::{get_peers, Peer};
 use crate::core::peer_manager::{start_p2p_server, broadcast_clipboard_update, LOCAL_DEVICE_NAME, ACTIVE_PEERS};
 use crate::core::discovery::{start_udp_announcer, start_udp_listener};
 use crate::core::reconnect::start_reconnect_loop;
 use crate::core::heartbeat::start_heartbeat_loop;
+#[cfg(target_os = "linux")]
 use crate::core::clipboard::linux::start_linux_clipboard_monitor;
 use crate::core::crypto::register_identity_keys;
 use crate::core::trust_store::{init_trust_store, get_all_trusted_devices, remove_trusted_device};
@@ -44,8 +47,9 @@ pub fn register_keys(signing_key_bytes: Vec<u8>, dh_key_bytes: Vec<u8>) -> Vec<S
 
 use crate::core::lifecycle::{set_client_only, register_initial_handles};
 
-pub fn start_sync(storage_dir: String, device_name: String, platform: String) {
+pub fn start_sync(storage_dir: String, device_name: String, platform: String, device_id: String) {
     init_trust_store(storage_dir);
+    crate::core::sync_engine::engine::set_my_device_id(device_id);
 
     {
         let mut name_guard = LOCAL_DEVICE_NAME.lock().unwrap();
@@ -77,6 +81,7 @@ pub fn start_sync(storage_dir: String, device_name: String, platform: String) {
 
         register_initial_handles(h_announcer, h_listener, h_heartbeat, h_reconnect);
 
+        #[cfg(target_os = "linux")]
         if platform == "linux" {
             tokio::spawn(start_linux_clipboard_monitor());
         }
@@ -120,17 +125,22 @@ pub fn get_trusted_peers() -> Vec<TrustedPeer> {
 }
 
 pub fn initiate_pairing(peer_id: String) {
+    println!("Rust API: initiate_pairing called with peer_id = {}", peer_id);
     RUNTIME.spawn(async move {
         let (ip, port) = {
             let registry = REGISTRY.lock().unwrap();
             if let Some(peer) = registry.get(&peer_id) {
                 (peer.ip_address.clone(), peer.ws_port)
             } else {
+                println!("Rust API: peer_id '{}' not found in discovered registry!", peer_id);
                 return;
             }
         };
+        println!("Rust API: calling initiate_pairing_flow with {}:{} for peer '{}'", ip, port, peer_id);
         if port > 0 {
             initiate_pairing_flow(peer_id, ip, port).await;
+        } else {
+            println!("Rust API: Port is 0, skipping connection.");
         }
     });
 }

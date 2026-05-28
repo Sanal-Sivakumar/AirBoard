@@ -1,5 +1,5 @@
 use std::sync::Mutex;
-use once_cell::sync::Lazy;
+use once_cell::sync::{Lazy, OnceCell};
 use crate::core::utils::helpers::compute_hash;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -7,6 +7,12 @@ pub enum SyncEvent {
     ClipboardUpdated { content: String },
     ConnectionStatus { connected: bool, message: String },
     Error { message: String },
+}
+
+pub static DEVICE_ID: OnceCell<String> = OnceCell::new();
+
+pub fn set_my_device_id(id: String) {
+    let _ = DEVICE_ID.set(id);
 }
 
 pub struct SyncEngine {
@@ -64,8 +70,10 @@ impl SyncEngine {
 }
 
 pub static SYNC_ENGINE: Lazy<SyncEngine> = Lazy::new(|| {
-    let device_id = uuid::Uuid::new_v4().to_string();
-    SyncEngine::new(device_id)
+    let id = DEVICE_ID.get().cloned().unwrap_or_else(|| {
+        uuid::Uuid::new_v4().to_string()
+    });
+    SyncEngine::new(id)
 });
 
 pub static EVENT_SINK: Lazy<Mutex<Option<crate::StreamSink<SyncEvent>>>> = Lazy::new(|| Mutex::new(None));

@@ -4,6 +4,7 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api.dart';
+import 'api/simple.dart';
 import 'core/connection_registry.dart';
 import 'core/sync_engine/engine.dart';
 import 'dart:async';
@@ -60,7 +61,9 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       RustLibWire.fromExternalLibrary;
 
   @override
-  Future<void> executeRustInitializers() async {}
+  Future<void> executeRustInitializers() async {
+    await api.crateApiSimpleInitApp();
+  }
 
   @override
   ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig =>
@@ -70,7 +73,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 913674746;
+  int get rustContentHash => -2121526788;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -91,11 +94,15 @@ abstract class RustLibApi extends BaseApi {
 
   Future<List<TrustedPeer>> crateApiGetTrustedPeers();
 
+  String crateApiSimpleGreet({required String name});
+
   Future<void> crateApiHandleAppBackground();
 
   Future<void> crateApiHandleAppForeground();
 
   Stream<SyncEvent> crateApiInitApp();
+
+  Future<void> crateApiSimpleInitApp();
 
   Future<void> crateApiInitiatePairing({required String peerId});
 
@@ -107,7 +114,8 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiStartSync(
       {required String storageDir,
       required String deviceName,
-      required String platform});
+      required String platform,
+      required String deviceId});
 
   Future<void> crateApiUnpairDevice({required String peerId});
 }
@@ -216,12 +224,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  String crateApiSimpleGreet({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSimpleGreetConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSimpleGreetConstMeta => const TaskConstMeta(
+        debugName: "greet",
+        argNames: ["name"],
+      );
+
+  @override
   Future<void> crateApiHandleAppBackground() {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 5, port: port_);
+            funcId: 6, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -245,7 +276,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 6, port: port_);
+            funcId: 7, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -271,7 +302,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_StreamSink_sync_event_Sse(sink, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 7, port: port_);
+            funcId: 8, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -290,13 +321,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiSimpleInitApp() {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 9, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSimpleInitAppConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSimpleInitAppConstMeta => const TaskConstMeta(
+        debugName: "init_app",
+        argNames: [],
+      );
+
+  @override
   Future<void> crateApiInitiatePairing({required String peerId}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(peerId, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 8, port: port_);
+            funcId: 10, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -322,7 +376,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_list_prim_u_8_loose(signingKeyBytes, serializer);
         sse_encode_list_prim_u_8_loose(dhKeyBytes, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 9, port: port_);
+            funcId: 11, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_String,
@@ -346,7 +400,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(content, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 10, port: port_);
+            funcId: 12, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -368,29 +422,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Future<void> crateApiStartSync(
       {required String storageDir,
       required String deviceName,
-      required String platform}) {
+      required String platform,
+      required String deviceId}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(storageDir, serializer);
         sse_encode_String(deviceName, serializer);
         sse_encode_String(platform, serializer);
+        sse_encode_String(deviceId, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 11, port: port_);
+            funcId: 13, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: null,
       ),
       constMeta: kCrateApiStartSyncConstMeta,
-      argValues: [storageDir, deviceName, platform],
+      argValues: [storageDir, deviceName, platform, deviceId],
       apiImpl: this,
     ));
   }
 
   TaskConstMeta get kCrateApiStartSyncConstMeta => const TaskConstMeta(
         debugName: "start_sync",
-        argNames: ["storageDir", "deviceName", "platform"],
+        argNames: ["storageDir", "deviceName", "platform", "deviceId"],
       );
 
   @override
@@ -400,7 +456,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(peerId, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 12, port: port_);
+            funcId: 14, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
