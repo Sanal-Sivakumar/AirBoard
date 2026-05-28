@@ -87,6 +87,7 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
   String _lifecycleState = "Resumed";
   String _lastSyncTimestamp = "Never";
   int _lastChangeCount = -1;
+  String? _pendingClipboardWrite;
 
   @override
   void initState() {
@@ -126,11 +127,24 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
 
     if (state == AppLifecycleState.resumed) {
       _log("App resumed. Resuming sync tasks...");
-      api.handleAppForeground();
+      if (Platform.isIOS) {
+        api.handleAppForeground();
+      }
       _startIosClipboardPoller();
+
+      if (_pendingClipboardWrite != null) {
+        final text = _pendingClipboardWrite!;
+        _pendingClipboardWrite = null;
+        _log("Writing pending background sync clipboard data...");
+        Clipboard.setData(ClipboardData(text: text)).catchError((e) {
+          _log("Failed to write pending clipboard: $e");
+        });
+      }
     } else if (state == AppLifecycleState.paused) {
       _log("App paused. Suspending sync tasks...");
-      api.handleAppBackground();
+      if (Platform.isIOS) {
+        api.handleAppBackground();
+      }
       _iosClipboardTimer?.cancel();
     }
   }
@@ -271,21 +285,42 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
 
       if (content != null && content != _lastClipboardText) {
         _lastClipboardText = content;
+        final String text = content;
         if (Platform.isIOS) {
-          _clipboardChannel.invokeMethod('setClipboardText', {'text': content}).then((_) {
+          _clipboardChannel.invokeMethod('setClipboardText', {'text': text}).then((_) {
             _clipboardChannel.invokeMethod<int>('getChangeCount').then((cc) {
               if (cc != null) {
                 _lastChangeCount = cc;
               }
             });
           });
+          _log("Sync board in: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
+          setState(() {
+            _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
+          });
         } else {
-          Clipboard.setData(ClipboardData(text: content));
+          if (Platform.isAndroid && _lifecycleState != "resumed") {
+            _pendingClipboardWrite = text;
+            _log("Buffered background clipboard sync (will apply on app open): '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
+            setState(() {
+              _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
+            });
+          } else {
+            Clipboard.setData(ClipboardData(text: text)).then((_) {
+              _log("Sync board in: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
+              setState(() {
+                _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
+              });
+            }).catchError((e) {
+              if (Platform.isAndroid) {
+                _pendingClipboardWrite = text;
+                _log("Clipboard write blocked by OS in background, buffered sync instead.");
+              } else {
+                _log("Failed to write to clipboard: $e");
+              }
+            });
+          }
         }
-        _log("Sync board in: '${content.length > 25 ? '${content.substring(0, 25)}...' : content}'");
-        setState(() {
-          _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
-        });
       }
     } else if (event is SyncEvent_ConnectionStatus || eventStr.contains("connectionStatus")) {
       String message = "";

@@ -17,7 +17,7 @@ pub fn trigger_reconnect() {
         let port = peer.ws_port;
 
         if port > 0 && crate::core::trust_store::is_device_trusted(&peer_id) {
-            tokio::spawn(async move {
+            crate::api::RUNTIME.spawn(async move {
                 connect_to_peer(peer_id, ip, port).await;
             });
         }
