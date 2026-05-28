@@ -20,7 +20,6 @@ use crate::core::trust_store::{is_device_trusted, get_trusted_device};
 use crate::core::session::{register_session_key, get_session_key, remove_session};
 use crate::core::pairing::{handle_pairing_flow, PairingMessage};
 use crate::core::clipboard_state::get_clipboard_state;
-use crate::core::lifecycle::IS_CLIENT_ONLY;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
@@ -262,15 +261,6 @@ async fn handle_incoming_connection(stream: TcpStream, ip_address: String) -> Re
 }
 
 pub async fn connect_to_peer(peer_id: String, ip: String, port: u16) {
-    let local_id = SYNC_ENGINE.device_id.clone();
-    let is_client_only = {
-        let guard = IS_CLIENT_ONLY.lock().unwrap();
-        *guard
-    };
-    if !is_client_only && local_id >= peer_id {
-        return;
-    }
-
     {
         let peers = ACTIVE_PEERS.lock().unwrap();
         if peers.contains_key(&peer_id) {
