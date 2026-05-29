@@ -70,9 +70,9 @@ class SilentAudioManager {
         header.append("WAVE".data(using: .utf8)!)
         
         header.append("fmt ".data(using: .utf8)!)
-        var subchunk1Size: Int32 = 16.littleEndian
+        var subchunk1Size = Int32(16).littleEndian
         header.append(Data(bytes: &subchunk1Size, count: 4))
-        var audioFormat: Int16 = 1.littleEndian
+        var audioFormat = Int16(1).littleEndian
         header.append(Data(bytes: &audioFormat, count: 2))
         var channelsBytes = numChannels.littleEndian
         header.append(Data(bytes: &channelsBytes, count: 2))
