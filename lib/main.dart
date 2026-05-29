@@ -159,7 +159,8 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
     } else if (state == AppLifecycleState.paused) {
       _log("App paused. Suspending sync tasks...");
       if (Platform.isIOS) {
-        api.handleAppBackground();
+        // Keep Rust engine active in background via audio mode.
+        // We only cancel the clipboard poller to save CPU, since general pasteboard is unreadable in background.
       }
       _iosClipboardTimer?.cancel();
       if (Platform.isAndroid) {
@@ -306,17 +307,31 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
         _lastClipboardText = content;
         final String text = content;
         if (Platform.isIOS) {
-          _clipboardChannel.invokeMethod('setClipboardText', {'text': text}).then((_) {
-            _clipboardChannel.invokeMethod<int>('getChangeCount').then((cc) {
-              if (cc != null) {
-                _lastChangeCount = cc;
-              }
+          if (_lifecycleState.toLowerCase() != "resumed") {
+            _pendingClipboardWrite = text;
+            _log("Buffered background clipboard sync: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
+            _clipboardChannel.invokeMethod('showLocalNotification', {
+              'title': 'Synced from PC',
+              'body': text.length > 50 ? '${text.substring(0, 50)}...' : text,
+            }).catchError((e) {
+              _log("Failed to show local notification: $e");
             });
-          });
-          _log("Sync board in: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
-          setState(() {
-            _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
-          });
+            setState(() {
+              _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
+            });
+          } else {
+            _clipboardChannel.invokeMethod('setClipboardText', {'text': text}).then((_) {
+              _clipboardChannel.invokeMethod<int>('getChangeCount').then((cc) {
+                if (cc != null) {
+                  _lastChangeCount = cc;
+                }
+              });
+            });
+            _log("Sync board in: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
+            setState(() {
+              _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
+            });
+          }
         } else {
           if (Platform.isAndroid && _lifecycleState.toLowerCase() != "resumed") {
             _pendingClipboardWrite = text;
@@ -865,6 +880,12 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
         if (Platform.isAndroid) {
           _startAndroidClipboardPoller();
         } else if (Platform.isIOS) {
+          try {
+            await _clipboardChannel.invokeMethod('startSilentAudio');
+            _log("Background silent audio started.");
+          } catch (e) {
+            _log("Failed to start silent audio: $e");
+          }
           _startIosClipboardPoller();
         }
 
@@ -883,6 +904,18 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
           await _serviceChannel.invokeMethod('stopForegroundService');
         } catch (e) {
           _log("Failed to stop foreground service: $e");
+        }
+      } else if (Platform.isIOS) {
+        try {
+          await _clipboardChannel.invokeMethod('stopSilentAudio');
+          _log("Background silent audio stopped.");
+        } catch (e) {
+          _log("Failed to stop silent audio: $e");
+        }
+        try {
+          await api.handleAppBackground();
+        } catch (e) {
+          _log("Failed to suspend Rust engine: $e");
         }
       }
 
