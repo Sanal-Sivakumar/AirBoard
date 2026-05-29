@@ -173,15 +173,32 @@ class ClipboardSyncService : Service() {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
 
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        } else {
+            PendingIntent.FLAG_UPDATE_CURRENT
+        }
+
+        // Add persistent "Sync to PC" action button
+        val sendIntent = Intent(this, ClipboardWriteActivity::class.java).apply {
+            putExtra("action", "read_and_send")
+            action = "com.example.clipboard.SEND_ACTION_" + System.currentTimeMillis()
+        }
+        val pendingSendIntent = PendingIntent.getActivity(this, 1, sendIntent, flags)
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+            val sendAction = Notification.Action.Builder(
+                android.R.drawable.ic_menu_share,
+                "Sync to PC",
+                pendingSendIntent
+            ).build()
+            builder.addAction(sendAction)
+        }
+
         if (syncText != null) {
             val copyIntent = Intent(this, ClipboardWriteActivity::class.java).apply {
                 putExtra("text", syncText)
                 action = "com.example.clipboard.COPY_ACTION_" + System.currentTimeMillis()
-            }
-            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            } else {
-                PendingIntent.FLAG_UPDATE_CURRENT
             }
             val pendingIntent = PendingIntent.getActivity(this, 0, copyIntent, flags)
             

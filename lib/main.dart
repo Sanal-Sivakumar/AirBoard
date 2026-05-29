@@ -95,6 +95,19 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
     _tabController = TabController(length: 2, vsync: this);
     if (Platform.isAndroid) {
       _nameController.text = "Android Phone";
+      _serviceChannel.setMethodCallHandler((call) async {
+        if (call.method == 'sendClipboardToPC') {
+          final String? text = call.arguments as String?;
+          if (text != null && text.isNotEmpty) {
+            _log("Syncing Android clip to PC: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
+            try {
+              await api.sendLocalClipboardUpdate(content: text);
+            } catch (e) {
+              _log("Failed to sync Android clip: $e");
+            }
+          }
+        }
+      });
     } else if (Platform.isIOS) {
       _nameController.text = "iPad Client";
     } else {
