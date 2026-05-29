@@ -386,58 +386,181 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
   }
 
   void _showPairingRequestDialog(String deviceId, String deviceName, String fingerprint) {
+    // Format fingerprint: split by ':' and make uppercase, then split into lines of 8 bytes
+    // (arranged as two 4-byte groups separated by spaces) for superior readability
+    final cleanFingerprint = fingerprint.toUpperCase();
+    final parts = cleanFingerprint.split(':');
+    final lines = <String>[];
+    for (var i = 0; i < parts.length; i += 8) {
+      if (i + 4 < parts.length) {
+        final block1 = parts.sublist(i, i + 4).join(":");
+        final block2 = parts.sublist(i + 4, min(i + 8, parts.length)).join(":");
+        lines.add("$block1   $block2");
+      } else {
+        lines.add(parts.sublist(i, parts.length).join(":"));
+      }
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Row(
+        backgroundColor: const Color(0xFF1E293B), // Slate 800
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF334155), width: 1.5), // Slate 700 border
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+        contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        title: Row(
           children: [
-            Icon(Icons.security, color: Colors.amber),
-            SizedBox(width: 10),
-            Text("Pairing Request"),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.security, color: Colors.amber, size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              "Pairing Request",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 0.5,
+              ),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("A device is requesting to pair with you:"),
-            const SizedBox(height: 12),
-            Text("Name: $deviceName", style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text("ID: ${deviceId.substring(0, 12)}...", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(
+              "A device is requesting to pair with you:",
+              style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14),
+            ),
             const SizedBox(height: 16),
-            Text("Fingerprint:", style: TextStyle(color: Slate.c400, fontSize: 13)),
             Container(
-              padding: const EdgeInsets.all(8),
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(6),
+                color: const Color(0xFF0F172A), // Slate 900
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFF334155)),
               ),
-              child: Text(
-                fingerprint,
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 11,
-                  color: Colors.amber,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.phonelink_setup, color: Color(0xFF0EA5E9), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          deviceName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 26),
+                    child: Text(
+                      "ID: ${deviceId.substring(0, min(deviceId.length, 12))}...",
+                      style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5)),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-            const Text(
-              "Warning: Only approve if you are actively pairing and the fingerprints match on both screens.",
-              style: TextStyle(fontSize: 11, color: Colors.amber),
+            const SizedBox(height: 16),
+            Text(
+              "Fingerprint:",
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F172A), // Slate 900
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFF334155)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: lines.map((line) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3.0),
+                    child: Text(
+                      line,
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 14,
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber.withOpacity(0.3)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      "Only approve if you are actively pairing and the fingerprints match on both screens.",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.amber.shade200,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () {
               api.approvePairing(peerId: deviceId, approve: false);
               Navigator.pop(context);
               _log("Pairing request from $deviceName rejected.");
             },
-            child: const Text("Deny", style: TextStyle(color: Colors.red)),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.redAccent,
+              side: BorderSide(color: Colors.redAccent.withOpacity(0.5)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text("Deny", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -445,8 +568,14 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
               Navigator.pop(context);
               _log("Pairing request from $deviceName approved!");
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
-            child: const Text("Approve"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981), // Emerald Green
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 2,
+            ),
+            child: const Text("Approve", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
