@@ -152,6 +152,11 @@ pub fn approve_pairing(peer_id: String, approve: bool) {
 pub fn unpair_device(peer_id: String) {
     remove_trusted_device(&peer_id);
     
-    let mut peers = ACTIVE_PEERS.lock().unwrap();
-    peers.remove(&peer_id);
+    let conn_opt = {
+        let mut peers = ACTIVE_PEERS.lock().unwrap();
+        peers.remove(&peer_id)
+    };
+    if let Some(conn) = conn_opt {
+        let _ = conn.cancel_tx.send(());
+    }
 }

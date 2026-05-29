@@ -470,6 +470,182 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
     });
   }
 
+  Future<bool> _showOverlayPermissionExplainDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: const Color(0xFF1E293B), // Slate 800
+        title: Row(
+          children: [
+            Icon(Icons.layers, color: Theme.of(context).colorScheme.primary, size: 24),
+            const SizedBox(width: 12),
+            const Text(
+              "Seamless Sync Setup",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "To sync your clipboard automatically in the background (even when the app is minimized), AirBoard needs the 'Display over other apps' (Overlay) permission.",
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0x15FFC107), // translucent amber
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0x33FFC107)),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.amberAccent, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "Without this permission, you must manually tap 'Copy' in the notification shade for every incoming sync.",
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: Colors.amberAccent,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              "Later",
+              style: TextStyle(color: Colors.white60, fontWeight: FontWeight.w600),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            child: const Text(
+              "Grant Permission",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<bool> _showBatteryOptimizationExplainDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: const Color(0xFF1E293B), // Slate 800
+        title: Row(
+          children: [
+            Icon(Icons.battery_alert, color: Theme.of(context).colorScheme.primary, size: 24),
+            const SizedBox(width: 12),
+            const Text(
+              "Battery Optimization",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "To ensure seamless background syncing when your device is idle, Android requires battery optimization to be disabled for AirBoard.",
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0x15FFC107), // translucent amber
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0x33FFC107)),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.amberAccent, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "Without this, Android will kill the background connection and sync will stop working after a few minutes of inactivity.",
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: Colors.amberAccent,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              "Later",
+              style: TextStyle(color: Colors.white60, fontWeight: FontWeight.w600),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            child: const Text(
+              "Disable Optimization",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   Future<void> _toggleSync(bool value) async {
     setState(() {
       _isSyncEnabled = value;
@@ -480,6 +656,34 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
       final devName = _nameController.text.trim();
 
       if (Platform.isAndroid) {
+        try {
+          final bool? hasOverlay = await _serviceChannel.invokeMethod<bool>('checkOverlayPermission');
+          if (hasOverlay != null && !hasOverlay) {
+            _log("Overlay permission not granted.");
+            final proceed = await _showOverlayPermissionExplainDialog();
+            if (proceed) {
+              await _serviceChannel.invokeMethod('requestOverlayPermission');
+              _log("Opening overlay settings. Please enable display over other apps.");
+            }
+          }
+        } catch (e) {
+          _log("Overlay permission check error: $e");
+        }
+
+        try {
+          final bool? ignoringBattery = await _serviceChannel.invokeMethod<bool>('checkBatteryOptimization');
+          if (ignoringBattery != null && !ignoringBattery) {
+            _log("Battery optimization is enabled.");
+            final proceed = await _showBatteryOptimizationExplainDialog();
+            if (proceed) {
+              await _serviceChannel.invokeMethod('requestDisableBatteryOptimization');
+              _log("Requesting to ignore battery optimizations...");
+            }
+          }
+        } catch (e) {
+          _log("Battery optimization check error: $e");
+        }
+
         try {
           await _serviceChannel.invokeMethod('startForegroundService');
         } catch (e) {

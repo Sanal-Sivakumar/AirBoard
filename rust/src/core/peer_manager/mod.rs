@@ -74,15 +74,20 @@ pub struct EncryptedEnvelope {
 
 pub type TxChannel = mpsc::UnboundedSender<WsMessage>;
 
-pub static ACTIVE_PEERS: Lazy<Mutex<HashMap<String, TxChannel>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+pub struct PeerConnection {
+    pub tx: TxChannel,
+    pub cancel_tx: tokio::sync::oneshot::Sender<()>,
+}
+
+pub static ACTIVE_PEERS: Lazy<Mutex<HashMap<String, PeerConnection>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 pub static LOCAL_DEVICE_NAME: Lazy<Mutex<String>> = Lazy::new(|| Mutex::new("Device".to_string()));
 
-pub fn register_peer(device_id: String, tx: TxChannel) -> bool {
+pub fn register_peer(device_id: String, tx: TxChannel, cancel_tx: tokio::sync::oneshot::Sender<()>) -> bool {
     let mut peers = ACTIVE_PEERS.lock().unwrap();
     if peers.contains_key(&device_id) {
         return false;
     }
-    peers.insert(device_id, tx);
+    peers.insert(device_id, PeerConnection { tx, cancel_tx });
     true
 }
 
@@ -107,7 +112,7 @@ pub fn broadcast_clipboard_update(origin_device_id: String, packet_id: String, c
     let local_id = SYNC_ENGINE.device_id.clone();
 
     let peers = ACTIVE_PEERS.lock().unwrap();
-    for (id, tx) in peers.iter() {
+    for (id, conn) in peers.iter() {
         if let Some(ref exclude) = exclude_device_id {
             if id == exclude {
                 continue;
@@ -124,7 +129,7 @@ pub fn broadcast_clipboard_update(origin_device_id: String, packet_id: String, c
                     ciphertext: BASE64.encode(ciphertext),
                 };
                 if let Ok(env_str) = serde_json::to_string(&envelope) {
-                    let _ = tx.send(WsMessage::Text(env_str));
+                    let _ = conn.tx.send(WsMessage::Text(env_str));
                 }
             }
         }
@@ -143,7 +148,7 @@ pub fn send_heartbeats() {
     let local_id = SYNC_ENGINE.device_id.clone();
 
     let peers = ACTIVE_PEERS.lock().unwrap();
-    for (id, tx) in peers.iter() {
+    for (id, conn) in peers.iter() {
         if let Some(key) = get_session_key(id) {
             if let Ok((ciphertext, nonce)) = chacha_encrypt(&key, &plaintext) {
                 let envelope = EncryptedEnvelope {
@@ -153,7 +158,7 @@ pub fn send_heartbeats() {
                     ciphertext: BASE64.encode(ciphertext),
                 };
                 if let Ok(env_str) = serde_json::to_string(&envelope) {
-                    let _ = tx.send(WsMessage::Text(env_str));
+                    let _ = conn.tx.send(WsMessage::Text(env_str));
                 }
             }
         }
@@ -368,8 +373,9 @@ where
     S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static,
 {
     let (tx, mut rx) = mpsc::unbounded_channel::<WsMessage>();
+    let (cancel_tx, mut cancel_rx) = tokio::sync::oneshot::channel::<()>();
 
-    if !register_peer(peer_device_id.clone(), tx.clone()) {
+    if !register_peer(peer_device_id.clone(), tx.clone(), cancel_tx) {
         return Ok(());
     }
 
@@ -435,17 +441,20 @@ where
                                             {
                                                 let content_clone = content.clone();
                                                 tokio::spawn(async move {
+                                                    android_log(&format!("Rust connecting to local socket bridge with {} bytes...", content_clone.len()));
                                                     match tokio::net::TcpStream::connect("127.0.0.1:45456").await {
                                                         Ok(mut stream) => {
                                                             use tokio::io::AsyncWriteExt;
                                                             if let Err(e) = stream.write_all(content_clone.as_bytes()).await {
-                                                                println!("Rust local socket: write error: {:?}", e);
+                                                                android_log(&format!("Rust local socket write error: {:?}", e));
                                                             } else {
-                                                                println!("Rust local socket: successfully notified local service");
+                                                                let _ = stream.flush().await;
+                                                                let _ = stream.shutdown().await;
+                                                                android_log("Rust local socket successfully wrote and shutdown stream");
                                                             }
                                                         }
                                                         Err(e) => {
-                                                            println!("Rust local socket: connection failed: {:?}", e);
+                                                            android_log(&format!("Rust local socket connection failed: {:?}", e));
                                                         }
                                                     }
                                                 });
@@ -477,7 +486,7 @@ where
                                                         if let Ok(env_str) = serde_json::to_string(&envelope) {
                                                             let peers = ACTIVE_PEERS.lock().unwrap();
                                                             if let Some(peer_tx) = peers.get(&peer_id_read) {
-                                                                let _ = peer_tx.send(WsMessage::Text(env_str));
+                                                                let _ = peer_tx.tx.send(WsMessage::Text(env_str));
                                                             }
                                                         }
                                                     }
@@ -506,7 +515,7 @@ where
                                                         if let Ok(env_str) = serde_json::to_string(&envelope) {
                                                             let peers = ACTIVE_PEERS.lock().unwrap();
                                                             if let Some(peer_tx) = peers.get(&peer_id_read) {
-                                                                let _ = peer_tx.send(WsMessage::Text(env_str));
+                                                                let _ = peer_tx.tx.send(WsMessage::Text(env_str));
                                                             }
                                                         }
                                                     }
@@ -526,6 +535,7 @@ where
     tokio::select! {
         _ = &mut write_task => {},
         _ = &mut read_task => {},
+        _ = &mut cancel_rx => {},
     }
 
     deregister_peer(&peer_device_id);
@@ -536,4 +546,24 @@ where
     });
 
     Ok(())
+}
+
+#[cfg(target_os = "android")]
+extern "C" {
+    fn __android_log_print(
+        prio: std::os::raw::c_int,
+        tag: *const std::os::raw::c_char,
+        fmt: *const std::os::raw::c_char,
+        ...
+    ) -> std::os::raw::c_int;
+}
+
+#[cfg(target_os = "android")]
+pub fn android_log(message: &str) {
+    use std::ffi::CString;
+    let tag = CString::new("RustAirBoard").unwrap();
+    let msg = CString::new(message).unwrap();
+    unsafe {
+        __android_log_print(4, tag.as_ptr(), msg.as_ptr());
+    }
 }

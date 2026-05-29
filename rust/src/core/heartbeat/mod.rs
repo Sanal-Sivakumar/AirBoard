@@ -13,11 +13,14 @@ pub async fn start_heartbeat_loop() {
         // Prune inactive peers (unresponsive for more than 30 seconds)
         let pruned = prune_inactive_peers(30);
         for id in pruned {
-            {
+            let conn_opt = {
                 let mut peers = ACTIVE_PEERS.lock().unwrap();
-                peers.remove(&id);
-            }
+                peers.remove(&id)
+            };
             update_connection_status(&id, "Disconnected");
+            if let Some(conn) = conn_opt {
+                let _ = conn.cancel_tx.send(());
+            }
             emit_event(SyncEvent::ConnectionStatus {
                 connected: false,
                 message: format!("Peer timed out: {}", id),

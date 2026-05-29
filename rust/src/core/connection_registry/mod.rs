@@ -88,9 +88,18 @@ pub fn prune_inactive_peers(timeout_seconds: u64) -> Vec<String> {
         }
     }
 
+    let mut pruned_ids = Vec::new();
     for id in &to_remove {
-        registry.remove(id);
+        let is_trusted = crate::core::trust_store::is_device_trusted(id);
+        if is_trusted {
+            if let Some(peer) = registry.get_mut(id) {
+                peer.connection_status = "Disconnected".to_string();
+            }
+            pruned_ids.push(id.clone());
+        } else {
+            registry.remove(id);
+        }
     }
 
-    to_remove
+    pruned_ids
 }

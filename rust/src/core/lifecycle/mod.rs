@@ -110,5 +110,7 @@ pub fn handle_app_background() {
 
     // Close connections
     let mut peers = ACTIVE_PEERS.lock().unwrap();
-    peers.clear();
+    for (_, conn) in peers.drain() {
+        let _ = conn.cancel_tx.send(());
+    }
 }
