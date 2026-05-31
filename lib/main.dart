@@ -74,6 +74,7 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
   final _nameController = TextEditingController();
   final _manualIpController = TextEditingController();
   final List<String> _logs = [];
+  BuildContext? _dialogContext;
 
   List<dynamic> _discoveredPeers = [];
   List<dynamic> _trustedPeers = [];
@@ -153,10 +154,14 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
       if (_pendingClipboardWrite != null) {
         final text = _pendingClipboardWrite!;
         _pendingClipboardWrite = null;
-        _log("Writing pending background sync clipboard data...");
-        Clipboard.setData(ClipboardData(text: text)).catchError((e) {
-          _log("Failed to write pending clipboard: $e");
-        });
+        if (Platform.isIOS) {
+          _showIOSIncomingDialog(text);
+        } else {
+          _log("Writing pending background sync clipboard data...");
+          Clipboard.setData(ClipboardData(text: text)).catchError((e) {
+            _log("Failed to write pending clipboard: $e");
+          });
+        }
       }
     } else if (state == AppLifecycleState.paused) {
       _log("App paused. Suspending sync tasks...");
@@ -322,14 +327,7 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
               _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
             });
           } else {
-            _clipboardChannel.invokeMethod('setClipboardText', {'text': text}).then((_) {
-              _clipboardChannel.invokeMethod<int>('getChangeCount').then((cc) {
-                if (cc != null) {
-                  _lastChangeCount = cc;
-                }
-              });
-            });
-            _log("Sync board in: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
+            _showIOSIncomingDialog(text);
             setState(() {
               _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
             });
@@ -597,6 +595,132 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
         ],
       ),
     );
+  }
+
+  void _dismissIOSIncomingDialog() {
+    if (_dialogContext != null) {
+      try {
+        Navigator.of(_dialogContext!).pop();
+      } catch (e) {
+        _log("Error dismissing incoming dialog: $e");
+      }
+      _dialogContext = null;
+    }
+  }
+
+  void _showIOSIncomingDialog(String text) {
+    _dismissIOSIncomingDialog();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) {
+        _dialogContext = dialogCtx;
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E293B), // Slate 800
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFF334155), width: 1.5), // Slate 700 border
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0EA5E9).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.copy, color: Color(0xFF0EA5E9), size: 24),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                "Incoming Sync",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "A new message was copied in the network:",
+                style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(maxHeight: 150),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F172A), // Slate 900
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFF334155)),
+                ),
+                child: SingleChildScrollView(
+                  child: Text(
+                    text,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            OutlinedButton(
+              onPressed: () {
+                _dialogContext = null;
+                Navigator.pop(dialogCtx);
+                _log("Incoming sync cancelled by user.");
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF94A3B8), // Slate 400
+                side: const BorderSide(color: Color(0xFF475569)), // Slate 600
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text("Cancel", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _dialogContext = null;
+                Navigator.pop(dialogCtx);
+                _clipboardChannel.invokeMethod('setClipboardText', {'text': text}).then((_) {
+                  _clipboardChannel.invokeMethod<int>('getChangeCount').then((cc) {
+                    if (cc != null) {
+                      _lastChangeCount = cc;
+                    }
+                  });
+                });
+                _log("Sync board in (user accepted): '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981), // Emerald Green
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                elevation: 2,
+              ),
+              child: const Text("Copy", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    ).then((_) {
+      _dialogContext = null;
+    });
   }
 
   Future<void> _detectLocalIp() async {
