@@ -160,3 +160,18 @@ pub fn unpair_device(peer_id: String) {
         let _ = conn.cancel_tx.send(());
     }
 }
+
+pub fn initiate_pairing_to_ip(ip_or_addr: String) {
+    println!("Rust API: initiate_pairing_to_ip called with {}", ip_or_addr);
+    RUNTIME.spawn(async move {
+        let (ip, port) = if let Some(pos) = ip_or_addr.find(':') {
+            let ip = ip_or_addr[..pos].to_string();
+            let port = ip_or_addr[pos + 1..].parse::<u16>().unwrap_or(45455);
+            (ip, port)
+        } else {
+            (ip_or_addr, 45455)
+        };
+        println!("Rust API: initiating manual pairing flow with {}:{}", ip, port);
+        initiate_pairing_flow("manual_connection".to_string(), ip, port).await;
+    });
+}

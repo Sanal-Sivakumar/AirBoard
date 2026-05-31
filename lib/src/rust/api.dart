@@ -55,6 +55,9 @@ Future<void> approvePairing({required String peerId, required bool approve}) =>
 Future<void> unpairDevice({required String peerId}) =>
     RustLib.instance.api.crateApiUnpairDevice(peerId: peerId);
 
+Future<void> initiatePairingToIp({required String ipOrAddr}) =>
+    RustLib.instance.api.crateApiInitiatePairingToIp(ipOrAddr: ipOrAddr);
+
 class TrustedPeer {
   final String deviceId;
   final String deviceName;

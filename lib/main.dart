@@ -72,6 +72,7 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
   String _deviceId = "Loading...";
   String _myFingerprint = "Loading...";
   final _nameController = TextEditingController();
+  final _manualIpController = TextEditingController();
   final List<String> _logs = [];
 
   List<dynamic> _discoveredPeers = [];
@@ -126,6 +127,7 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
     _iosClipboardTimer?.cancel();
     _uiRefreshTimer?.cancel();
     _nameController.dispose();
+    _manualIpController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -570,8 +572,8 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
               _log("Pairing request from $deviceName rejected.");
             },
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.redAccent,
-              side: BorderSide(color: Colors.redAccent.withOpacity(0.5)),
+              foregroundColor: const Color(0xFF94A3B8), // Slate 400
+              side: const BorderSide(color: Color(0xFF475569)), // Slate 600
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
@@ -1195,52 +1197,135 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with SingleTickerProvid
   }
 
   Widget _buildDiscoveredTab() {
-    if (_discoveredPeers.isEmpty) {
-      return const Center(child: Text("No devices discovered yet", style: TextStyle(color: Slate.c500)));
-    }
-
-    return ListView.builder(
-      itemCount: _discoveredPeers.length,
-      itemBuilder: (context, index) {
-        final peer = _discoveredPeers[index];
-        final isTrusted = _isPeerTrusted(peer.deviceId);
-
-        return Card(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Card(
           elevation: 0,
           color: const Color(0xFF1E293B),
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          child: ListTile(
-            dense: true,
-            title: Text(
-              peer.deviceName.isEmpty ? "Unknown Peer" : peer.deviceName,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              '${peer.ipAddress}:${peer.wsPort}\nStatus: ${peer.connectionStatus}',
-              style: TextStyle(color: Slate.c400, fontSize: 11),
-            ),
-            trailing: isTrusted
-                ? const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.shield, color: Color(0xFF10B981), size: 20),
-                      Text("Paired", style: TextStyle(color: Color(0xFF10B981), fontSize: 10, fontWeight: FontWeight.bold)),
-                    ],
-                  )
-                : ElevatedButton(
-                    onPressed: () {
-                      _log("Sending pairing request to ${peer.deviceName}...");
-                      api.initiatePairing(peerId: peer.deviceId);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber[700],
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    ),
-                    child: const Text("Pair Device", style: TextStyle(fontSize: 11)),
-                  ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Color(0xFF334155), width: 1.0),
           ),
-        );
-      },
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Manual Connection",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 38,
+                        child: TextField(
+                          controller: _manualIpController,
+                          style: const TextStyle(color: Colors.white, fontSize: 13),
+                          decoration: InputDecoration(
+                            hintText: 'Enter IP (e.g. 192.168.43.10)',
+                            hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF334155)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF334155)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF0EA5E9)),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        final ip = _manualIpController.text.trim();
+                        if (ip.isEmpty) return;
+                        _log("Initiating manual pairing to $ip...");
+                        api.initiatePairingToIp(ipOrAddr: ip);
+                      },
+                      icon: const Icon(Icons.add_link, size: 16),
+                      label: const Text("Connect", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0EA5E9),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: _discoveredPeers.isEmpty
+              ? const Center(
+                  child: Text(
+                    "No devices discovered yet",
+                    style: TextStyle(color: Slate.c500),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: _discoveredPeers.length,
+                  itemBuilder: (context, index) {
+                    final peer = _discoveredPeers[index];
+                    final isTrusted = _isPeerTrusted(peer.deviceId);
+
+                    return Card(
+                      elevation: 0,
+                      color: const Color(0xFF1E293B),
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      child: ListTile(
+                        dense: true,
+                        title: Text(
+                          peer.deviceName.isEmpty ? "Unknown Peer" : peer.deviceName,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          '${peer.ipAddress}:${peer.wsPort}\nStatus: ${peer.connectionStatus}',
+                          style: TextStyle(color: Slate.c400, fontSize: 11),
+                        ),
+                        trailing: isTrusted
+                            ? const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.shield, color: Color(0xFF10B981), size: 20),
+                                  Text("Paired", style: TextStyle(color: Color(0xFF10B981), fontSize: 10, fontWeight: FontWeight.bold)),
+                                ],
+                              )
+                            : ElevatedButton(
+                                onPressed: () {
+                                  _log("Sending pairing request to ${peer.deviceName}...");
+                                  api.initiatePairing(peerId: peer.deviceId);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber[700],
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                ),
+                                child: const Text("Pair Device", style: TextStyle(fontSize: 11)),
+                              ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 

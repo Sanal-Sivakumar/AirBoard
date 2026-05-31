@@ -23,6 +23,7 @@ class ClipboardSyncService : Service() {
     private var isRunning = false
     private var wakeLock: PowerManager.WakeLock? = null
     private var wifiLock: WifiManager.WifiLock? = null
+    private var multicastLock: WifiManager.MulticastLock? = null
 
     companion object {
         private const val CHANNEL_ID = "clipboard_sync_channel_v2"
@@ -61,6 +62,17 @@ class ClipboardSyncService : Service() {
             Log.e("ClipboardSyncService", "onCreate: failed to acquire WifiLock", e)
         }
 
+        try {
+            val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            multicastLock = wifiManager.createMulticastLock("AirBoard:MulticastLock").apply {
+                setReferenceCounted(false)
+                acquire()
+            }
+            Log.i("ClipboardSyncService", "onCreate: acquired MULTICAST_LOCK")
+        } catch (e: Exception) {
+            Log.e("ClipboardSyncService", "onCreate: failed to acquire MulticastLock", e)
+        }
+
         createNotificationChannel()
         startLocalServer()
     }
@@ -85,6 +97,15 @@ class ClipboardSyncService : Service() {
             }
         } catch (e: Exception) {
             Log.e("ClipboardSyncService", "onDestroy: failed to release WifiLock", e)
+        }
+
+        try {
+            if (multicastLock?.isHeld == true) {
+                multicastLock?.release()
+                Log.i("ClipboardSyncService", "onDestroy: released MulticastLock")
+            }
+        } catch (e: Exception) {
+            Log.e("ClipboardSyncService", "onDestroy: failed to release MulticastLock", e)
         }
 
         super.onDestroy()
