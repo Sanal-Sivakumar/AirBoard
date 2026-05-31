@@ -1,0 +1,9 @@
+[Desktop Entry]
+Categories=Utility;
+Comment=User-friendly sideloader
+Exec=iloader
+StartupWMClass=iloader
+Icon=iloader
+Name=iloader
+Terminal=false
+Type=Application
