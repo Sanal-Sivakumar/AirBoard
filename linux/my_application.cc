@@ -47,6 +47,15 @@ static void my_application_activate(GApplication* application) {
     gtk_window_set_title(window, "AirBoard");
   }
 
+  // Set window icon
+  g_autoptr(GError) icon_error = nullptr;
+  if (!gtk_window_set_icon_from_file(window, "assets/logo.png", &icon_error)) {
+    g_clear_error(&icon_error);
+    if (!gtk_window_set_icon_from_file(window, "data/flutter_assets/assets/logo.png", &icon_error)) {
+      g_warning("Could not set window icon: %s", icon_error->message);
+    }
+  }
+
   gtk_window_set_default_size(window, 1280, 720);
   gtk_widget_show(GTK_WIDGET(window));
 

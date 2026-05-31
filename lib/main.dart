@@ -704,7 +704,15 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
         backgroundColor: const Color(0xFF08090C), // Dark base
         title: Row(
           children: [
-            _renderSvg(AppIcons.logo, size: 24, color: GlassColors.accent),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.asset(
+                'assets/logo.png',
+                width: 24,
+                height: 24,
+                fit: BoxFit.cover,
+              ),
+            ),
             const SizedBox(width: 12),
             const Text(
               "Seamless Sync Setup",
@@ -1137,13 +1145,13 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
     );
   }
 
-  String _getDeviceIcon(String platform) {
-    final p = platform.toLowerCase();
-    if (p == 'linux' || p == 'windows' || p == 'macos') {
+  String _getDeviceIcon(String deviceName) {
+    final name = deviceName.toLowerCase();
+    if (name.contains('linux') || name.contains('pc') || name.contains('desktop') || name.contains('windows') || name.contains('macos')) {
       return AppIcons.desktopDevice;
-    } else if (p == 'android') {
+    } else if (name.contains('android') || name.contains('phone')) {
       return AppIcons.phoneDevice;
-    } else if (p == 'ios' || p == 'ipad' || p == 'ipados') {
+    } else if (name.contains('ipad') || name.contains('ios') || name.contains('client')) {
       return AppIcons.ipadDevice;
     }
     return AppIcons.unknownDevice;
@@ -1265,14 +1273,14 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
                   itemBuilder: (context, index) {
                     final peer = _discoveredPeers[index];
                     final isTrusted = _isPeerTrusted(peer.deviceId);
-                    final platform = peer.platform ?? 'unknown';
+                    final deviceIcon = _getDeviceIcon(peer.deviceName);
 
                     return GlassCard(
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       child: Row(
                         children: [
-                          _renderSvg(_getDeviceIcon(platform), size: 28),
+                          _renderSvg(deviceIcon, size: 28),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -1664,13 +1672,11 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Container(
+                child: Image.asset(
+                  'assets/logo.png',
                   width: 38,
                   height: 38,
-                  color: GlassColors.accent.withOpacity(0.08),
-                  child: Center(
-                    child: _renderSvg(AppIcons.logo, size: 28),
-                  ),
+                  fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(width: 10),
@@ -1863,7 +1869,15 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
               // Logo / Title
               Row(
                 children: [
-                  _renderSvg(AppIcons.logo, size: 24),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset(
+                      'assets/logo.png',
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   const Text(
                     "AirBoard",
@@ -2028,228 +2042,163 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
         ),
       ),
     );
-  }
-
-  Widget _buildDesktopLayout() {
-    return Column(
+  }  Widget _buildDesktopLayout() {
+    return Row(
       children: [
-        // Titlebar with traffic lights
+        // Left Sidebar
         Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          width: 220,
           decoration: const BoxDecoration(
-            color: Color(0x0FFFFFFF), // Glass
+            color: Color(0x05FFFFFF),
             border: Border(
-              bottom: BorderSide(color: Color(0x1CFFFFFF), width: 1.0),
+              right: BorderSide(color: Color(0x1CFFFFFF), width: 1.0),
             ),
           ),
-          child: Row(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Traffic lights
               Row(
                 children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFF453A),
-                      shape: BoxShape.circle,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset(
+                      'assets/logo.png',
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.cover,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFD60A),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF30D158),
-                      shape: BoxShape.circle,
+                  const SizedBox(width: 10),
+                  const Text(
+                    "AirBoard",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: GlassColors.t1,
+                      letterSpacing: -0.5,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(width: 24),
-              // Title
+              const SizedBox(height: 28),
+              
+              // NETWORK section
               const Text(
-                "AirBoard Secure P2P",
+                "NETWORK",
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: GlassColors.t2,
-                  letterSpacing: 0.5,
+                  fontSize: 9,
+                  color: GlassColors.t3,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
                 ),
               ),
+              const SizedBox(height: 6),
+              _buildSidebarNavItem(0, "Devices Discovered", AppIcons.devices),
+              _buildSidebarNavItem(1, "Trusted Peers", AppIcons.trusted),
+              
+              const SizedBox(height: 20),
+              
+              // SYSTEM section
+              const Text(
+                "SYSTEM",
+                style: TextStyle(
+                  fontSize: 9,
+                  color: GlassColors.t3,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 6),
+              _buildSidebarNavItem(2, "Security Logs", AppIcons.logs),
+              _buildSidebarNavItem(3, "Settings", AppIcons.settings),
+              
               const Spacer(),
-              // Local details in titlebar
-              Text(
-                "IP: $_localIp  •  FP: ${_myFingerprint.substring(0, min(_myFingerprint.length, 18))}...",
-                style: const TextStyle(fontSize: 11, color: GlassColors.t3, fontFamily: 'monospace'),
-              ),
-            ],
-          ),
-        ),
-        
-        // Main workspace
-        Expanded(
-          child: Row(
-            children: [
-              // Left Sidebar
+              
+              // Connection pill at bottom
               Container(
-                width: 220,
-                decoration: const BoxDecoration(
-                  color: Color(0x05FFFFFF),
-                  border: Border(
-                    right: BorderSide(color: Color(0x1CFFFFFF), width: 1.0),
-                  ),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0x0FFFFFFF),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0x1CFFFFFF)),
                 ),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        _renderSvg(AppIcons.logo, size: 28),
-                        const SizedBox(width: 10),
-                        const Text(
-                          "AirBoard",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: GlassColors.t1,
-                            letterSpacing: -0.5,
-                          ),
+                    PulsingDot(
+                      color: _isSyncEnabled ? GlassColors.green : Colors.grey,
+                      size: 6.0,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _isSyncEnabled ? "SECURE SYNC" : "OFFLINE",
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: _isSyncEnabled ? GlassColors.green : GlassColors.t2,
+                          letterSpacing: 0.5,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 28),
-                    
-                    // NETWORK section
-                    const Text(
-                      "NETWORK",
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: GlassColors.t3,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    _buildSidebarNavItem(0, "Devices Discovered", AppIcons.devices),
-                    _buildSidebarNavItem(1, "Trusted Peers", AppIcons.trusted),
-                    
-                    const SizedBox(height: 20),
-                    
-                    // SYSTEM section
-                    const Text(
-                      "SYSTEM",
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: GlassColors.t3,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    _buildSidebarNavItem(2, "Security Logs", AppIcons.logs),
-                    _buildSidebarNavItem(3, "Settings", AppIcons.settings),
-                    
-                    const Spacer(),
-                    
-                    // Connection pill at bottom
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0x0FFFFFFF),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0x1CFFFFFF)),
-                      ),
-                      child: Row(
-                        children: [
-                          PulsingDot(
-                            color: _isSyncEnabled ? GlassColors.green : Colors.grey,
-                            size: 6.0,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _isSyncEnabled ? "SECURE SYNC" : "OFFLINE",
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: _isSyncEnabled ? GlassColors.green : GlassColors.t2,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              
-              // Content Area + Stats Row
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Stats Row
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildStatCard(
-                              "DEVICES DISCOVERED",
-                              "${_discoveredPeers.length}",
-                              AppIcons.devices,
-                              GlassColors.accent,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildStatCard(
-                              "TRUSTED PEERS",
-                              "${_trustedPeers.length}",
-                              AppIcons.trusted,
-                              GlassColors.green,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildStatCard(
-                              "LAST SYNC",
-                              _lastSyncTimestamp,
-                              AppIcons.logo,
-                              GlassColors.purple,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Expanded(
-                        child: _buildActivePane(),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
+          ),
+        ),
+        
+        // Content Area + Stats Row
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Stats Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        "DEVICES DISCOVERED",
+                        "${_discoveredPeers.length}",
+                        _renderSvg(AppIcons.devices, size: 20, color: GlassColors.accent),
+                        GlassColors.accent,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        "TRUSTED PEERS",
+                        "${_trustedPeers.length}",
+                        _renderSvg(AppIcons.trusted, size: 20, color: GlassColors.green),
+                        GlassColors.green,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        "LAST SYNC",
+                        _lastSyncTimestamp,
+                        _renderSvg(AppIcons.syncOn, size: 20, color: GlassColors.purple),
+                        GlassColors.purple,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: _buildActivePane(),
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStatCard(String label, String value, String svgIcon, Color accentColor) {
+  Widget _buildStatCard(String label, String value, Widget iconWidget, Color accentColor) {
     return GlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -2261,7 +2210,7 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: accentColor.withOpacity(0.2)),
             ),
-            child: _renderSvg(svgIcon, size: 20, color: accentColor),
+            child: iconWidget,
           ),
           const SizedBox(width: 14),
           Expanded(
