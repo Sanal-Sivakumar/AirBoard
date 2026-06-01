@@ -385,16 +385,18 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
               _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
             });
           } else {
-            _clipboardChannel.invokeMethod('setClipboardText', {'text': text}).then((_) {
+            Clipboard.setData(ClipboardData(text: text)).then((_) {
               _clipboardChannel.invokeMethod<int>('getChangeCount').then((cc) {
                 if (cc != null) {
                   _lastChangeCount = cc;
                 }
               });
-            });
-            _log("Sync board in: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
-            setState(() {
-              _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
+              _log("Sync board in: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
+              setState(() {
+                _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
+              });
+            }).catchError((e) {
+              _log("Failed to write to iPadOS clipboard: $e");
             });
           }
         } else {
@@ -461,6 +463,13 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
         _showPairingRequestDialog(reqId, reqName, fingerprint);
       } else {
         _log("Core error: $message");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: GlassColors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
       }
     }
   }

@@ -1,6 +1,6 @@
 pub mod simple;
 
-use crate::core::sync_engine::engine::{SyncEvent, EVENT_SINK, SYNC_ENGINE};
+use crate::core::sync_engine::engine::{SyncEvent, EVENT_SINK, SYNC_ENGINE, emit_event};
 use crate::core::connection_registry::{get_peers, Peer};
 use crate::core::peer_manager::{start_p2p_server, broadcast_clipboard_update, LOCAL_DEVICE_NAME, ACTIVE_PEERS};
 use crate::core::discovery::{start_udp_announcer, start_udp_listener};
@@ -141,6 +141,9 @@ pub fn initiate_pairing(peer_id: String) {
             initiate_pairing_flow(peer_id, ip, port).await;
         } else {
             println!("Rust API: Port is 0, skipping connection.");
+            emit_event(SyncEvent::Error {
+                message: "iOS/iPadOS devices cannot accept incoming connections. Please initiate pairing from the iOS/iPadOS device instead.".to_string(),
+            });
         }
     });
 }
