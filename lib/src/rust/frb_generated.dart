@@ -73,7 +73,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => -1560705289;
+  int get rustContentHash => -716631083;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -120,6 +120,8 @@ abstract class RustLibApi extends BaseApi {
       required String deviceId});
 
   Future<void> crateApiUnpairDevice({required String peerId});
+
+  Future<void> crateApiUpdateLocalIp({required String ip});
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -498,6 +500,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiUnpairDeviceConstMeta => const TaskConstMeta(
         debugName: "unpair_device",
         argNames: ["peerId"],
+      );
+
+  @override
+  Future<void> crateApiUpdateLocalIp({required String ip}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(ip, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 16, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiUpdateLocalIpConstMeta,
+      argValues: [ip],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiUpdateLocalIpConstMeta => const TaskConstMeta(
+        debugName: "update_local_ip",
+        argNames: ["ip"],
       );
 
   @protected

@@ -58,6 +58,9 @@ Future<void> unpairDevice({required String peerId}) =>
 Future<void> initiatePairingToIp({required String ipOrAddr}) =>
     RustLib.instance.api.crateApiInitiatePairingToIp(ipOrAddr: ipOrAddr);
 
+Future<void> updateLocalIp({required String ip}) =>
+    RustLib.instance.api.crateApiUpdateLocalIp(ip: ip);
+
 class TrustedPeer {
   final String deviceId;
   final String deviceName;

@@ -205,6 +205,7 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
 
     if (state == AppLifecycleState.resumed) {
       _log("App resumed. Resuming sync tasks...");
+      _detectLocalIp();
       if (Platform.isIOS) {
         api.handleAppForeground();
       }
@@ -679,6 +680,11 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
             setState(() {
               _localIp = addr.address;
             });
+            try {
+              await api.updateLocalIp(ip: addr.address);
+            } catch (e) {
+              _log("Failed to update Rust local IP: $e");
+            }
             return;
           }
         }

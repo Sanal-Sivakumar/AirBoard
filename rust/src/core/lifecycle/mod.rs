@@ -51,6 +51,7 @@ pub fn register_initial_handles(
 pub fn handle_app_foreground() {
     let mut active = IS_ACTIVE.lock().unwrap();
     if *active {
+        trigger_reconnect();
         return; // already active
     }
     *active = true;

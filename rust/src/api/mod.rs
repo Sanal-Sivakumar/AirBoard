@@ -178,3 +178,8 @@ pub fn initiate_pairing_to_ip(ip_or_addr: String) {
         initiate_pairing_flow("manual_connection".to_string(), ip, port).await;
     });
 }
+
+pub fn update_local_ip(ip: String) {
+    let mut guard = crate::core::discovery::DYNAMIC_LOCAL_IP.lock().unwrap();
+    *guard = Some(ip);
+}

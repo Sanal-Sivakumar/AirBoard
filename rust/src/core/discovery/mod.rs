@@ -37,6 +37,8 @@ fn get_local_broadcasts_from_ip_cmd() -> Vec<std::net::IpAddr> {
     broadcasts
 }
 
+pub static DYNAMIC_LOCAL_IP: once_cell::sync::Lazy<std::sync::Mutex<Option<String>>> = once_cell::sync::Lazy::new(|| std::sync::Mutex::new(None));
+
 fn get_local_ip() -> Option<std::net::IpAddr> {
     let socket = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
     socket.connect("8.8.8.8:80").ok()?;
@@ -46,7 +48,17 @@ fn get_local_ip() -> Option<std::net::IpAddr> {
 fn get_broadcast_addresses() -> Vec<SocketAddr> {
     let mut addrs = vec!["255.255.255.255:45454".parse().unwrap()];
     
-    // 1. Try spawning "ip addr" command first (supported on Android/Linux)
+    // 1. Check dynamic local IP set from Dart side
+    let mut resolved_ip = None;
+    if let Ok(guard) = DYNAMIC_LOCAL_IP.lock() {
+        if let Some(ref ip_str) = *guard {
+            if let Ok(ip) = ip_str.parse::<std::net::IpAddr>() {
+                resolved_ip = Some(ip);
+            }
+        }
+    }
+    
+    // 2. Try spawning "ip addr" command first (supported on Android/Linux)
     let parsed_broadcasts = get_local_broadcasts_from_ip_cmd();
     if !parsed_broadcasts.is_empty() {
         for ip in parsed_broadcasts {
@@ -54,9 +66,10 @@ fn get_broadcast_addresses() -> Vec<SocketAddr> {
         }
     }
     
-    // 2. Fallback/Supplement with connectionless UDP routing resolver
-    if let Some(local_ip) = get_local_ip() {
-        if let std::net::IpAddr::V4(ipv4) = local_ip {
+    // 3. Fallback/Supplement with connectionless UDP routing resolver
+    let local_ip = resolved_ip.or_else(get_local_ip);
+    if let Some(ip) = local_ip {
+        if let std::net::IpAddr::V4(ipv4) = ip {
             let octets = ipv4.octets();
             if !ipv4.is_loopback() && !ipv4.is_unspecified() {
                 // Add standard /24 subnet broadcast
