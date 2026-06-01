@@ -15,6 +15,28 @@ pub struct DeviceAnnouncement {
     pub ws_port: u16,
 }
 
+fn get_local_broadcasts_from_ip_cmd() -> Vec<std::net::IpAddr> {
+    let mut broadcasts = Vec::new();
+    if let Ok(output) = std::process::Command::new("ip").arg("addr").output() {
+        if let Ok(stdout) = String::from_utf8(output.stdout) {
+            for line in stdout.lines() {
+                let trimmed = line.trim();
+                if trimmed.starts_with("inet ") {
+                    let parts: Vec<&str> = trimmed.split_whitespace().collect();
+                    if parts.len() > 3 && parts[2] == "brd" {
+                        if let Ok(ip) = parts[3].parse::<std::net::IpAddr>() {
+                            if !ip.is_loopback() && !ip.is_unspecified() {
+                                broadcasts.push(ip);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    broadcasts
+}
+
 fn get_local_ip() -> Option<std::net::IpAddr> {
     let socket = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
     socket.connect("8.8.8.8:80").ok()?;
@@ -23,6 +45,16 @@ fn get_local_ip() -> Option<std::net::IpAddr> {
 
 fn get_broadcast_addresses() -> Vec<SocketAddr> {
     let mut addrs = vec!["255.255.255.255:45454".parse().unwrap()];
+    
+    // 1. Try spawning "ip addr" command first (supported on Android/Linux)
+    let parsed_broadcasts = get_local_broadcasts_from_ip_cmd();
+    if !parsed_broadcasts.is_empty() {
+        for ip in parsed_broadcasts {
+            addrs.push(SocketAddr::new(ip, 45454));
+        }
+    }
+    
+    // 2. Fallback/Supplement with connectionless UDP routing resolver
     if let Some(local_ip) = get_local_ip() {
         if let std::net::IpAddr::V4(ipv4) = local_ip {
             let octets = ipv4.octets();
@@ -43,6 +75,7 @@ fn get_broadcast_addresses() -> Vec<SocketAddr> {
             }
         }
     }
+    
     addrs.sort();
     addrs.dedup();
     addrs
