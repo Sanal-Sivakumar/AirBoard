@@ -4,7 +4,7 @@ use arboard::Clipboard;
 use crate::core::sync_engine::engine::{SYNC_ENGINE, emit_event, SyncEvent};
 use crate::core::peer_manager::broadcast_clipboard_update;
 
-pub async fn start_linux_clipboard_monitor() {
+pub async fn start_desktop_clipboard_monitor() {
     let mut clipboard = match Clipboard::new() {
         Ok(cb) => cb,
         Err(e) => {
@@ -39,7 +39,7 @@ pub async fn start_linux_clipboard_monitor() {
     }
 }
 
-pub fn write_to_linux_clipboard(content: String) {
+pub fn write_to_desktop_clipboard(content: String) {
     match Clipboard::new() {
         Ok(mut cb) => {
             if let Err(e) = cb.set_text(content) {

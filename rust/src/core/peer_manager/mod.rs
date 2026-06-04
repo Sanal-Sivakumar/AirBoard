@@ -13,8 +13,8 @@ use sha2::Digest;
 
 use crate::core::connection_registry::{update_connection_status, add_or_update_peer};
 use crate::core::sync_engine::engine::{SYNC_ENGINE, emit_event, SyncEvent};
-#[cfg(target_os = "linux")]
-use crate::core::clipboard::linux::write_to_linux_clipboard;
+#[cfg(any(target_os = "linux", target_os = "windows"))]
+use crate::core::clipboard::desktop::write_to_desktop_clipboard;
 use crate::core::crypto::{sign_message, verify_message_signature, compute_shared_secret, chacha_encrypt, chacha_decrypt, get_my_public_keys};
 use crate::core::trust_store::{is_device_trusted, get_trusted_device};
 use crate::core::session::{register_session_key, get_session_key, remove_session};
@@ -434,8 +434,8 @@ where
                                         if SYNC_ENGINE.process_incoming_packet(&packet_id) {
                                             crate::core::clipboard_state::update_clipboard_state(content.clone(), timestamp, packet_id.clone());
 
-                                            #[cfg(target_os = "linux")]
-                                            write_to_linux_clipboard(content.clone());
+                                            #[cfg(any(target_os = "linux", target_os = "windows"))]
+                                            write_to_desktop_clipboard(content.clone());
 
                                             #[cfg(target_os = "android")]
                                             {

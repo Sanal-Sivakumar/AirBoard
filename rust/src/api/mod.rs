@@ -6,8 +6,8 @@ use crate::core::peer_manager::{start_p2p_server, broadcast_clipboard_update, LO
 use crate::core::discovery::{start_udp_announcer, start_udp_listener};
 use crate::core::reconnect::start_reconnect_loop;
 use crate::core::heartbeat::start_heartbeat_loop;
-#[cfg(target_os = "linux")]
-use crate::core::clipboard::linux::start_linux_clipboard_monitor;
+#[cfg(any(target_os = "linux", target_os = "windows"))]
+use crate::core::clipboard::desktop::start_desktop_clipboard_monitor;
 use crate::core::crypto::register_identity_keys;
 use crate::core::trust_store::{init_trust_store, get_all_trusted_devices, remove_trusted_device};
 use crate::core::pairing::{initiate_pairing_flow, respond_to_pairing, compute_fingerprint};
@@ -81,9 +81,9 @@ pub fn start_sync(storage_dir: String, device_name: String, platform: String, de
 
         register_initial_handles(h_announcer, h_listener, h_heartbeat, h_reconnect);
 
-        #[cfg(target_os = "linux")]
-        if platform == "linux" {
-            tokio::spawn(start_linux_clipboard_monitor());
+        #[cfg(any(target_os = "linux", target_os = "windows"))]
+        if platform == "linux" || platform == "windows" {
+            tokio::spawn(start_desktop_clipboard_monitor());
         }
     });
 }

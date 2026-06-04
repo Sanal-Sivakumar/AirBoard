@@ -175,6 +175,8 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
       });
     } else if (Platform.isIOS) {
       _nameController.text = "iPad Client";
+    } else if (Platform.isWindows) {
+      _nameController.text = "Windows PC";
     } else {
       _nameController.text = "Linux PC";
     }
@@ -949,6 +951,9 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
       if (Platform.isLinux) {
         final home = Platform.environment['HOME'];
         storageDir = home != null ? "$home/.config/syncboard" : Directory.current.path;
+      } else if (Platform.isWindows) {
+        final appData = Platform.environment['APPDATA'];
+        storageDir = appData != null ? "$appData/syncboard" : Directory.current.path;
       } else if (Platform.isAndroid) {
         storageDir = "/data/data/com.example.clipboard/files";
       } else if (Platform.isIOS) {
@@ -962,6 +967,8 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
         platformStr = "android";
       } else if (Platform.isIOS) {
         platformStr = "ios";
+      } else if (Platform.isWindows) {
+        platformStr = "windows";
       }
 
       try {
