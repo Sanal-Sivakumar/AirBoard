@@ -196,7 +196,7 @@ async fn handle_incoming_connection(stream: TcpStream, ip_address: String) -> Re
             if text.contains("pairing_request") {
                 println!("Rust Server: payload matches pairing_request. Starting pairing flow.");
                 if let Ok(PairingMessage::PairingRequest { device_id, device_name, public_signing_key, public_dh_key }) = serde_json::from_str::<PairingMessage>(&text) {
-                    handle_pairing_flow(ws_write, device_id, device_name, public_signing_key, public_dh_key).await?;
+                    handle_pairing_flow(ws_write, device_id, device_name, public_signing_key, public_dh_key, ip_address.clone()).await?;
                 } else {
                     println!("Rust Server Error: Failed to parse PairingRequest JSON!");
                 }
@@ -252,7 +252,8 @@ async fn handle_incoming_connection(stream: TcpStream, ip_address: String) -> Re
                 session_key.copy_from_slice(&hasher.finalize());
 
                 register_session_key(device_id.clone(), session_key);
-                add_or_update_peer(device_id.clone(), peer.device_name, ip_address, 0);
+                add_or_update_peer(device_id.clone(), peer.device_name, ip_address.clone(), 0);
+                crate::core::trust_store::update_trusted_device_ip_port(&device_id, ip_address, 0);
                 
                 device_id
             } else {
@@ -270,6 +271,15 @@ pub async fn connect_to_peer(peer_id: String, ip: String, port: u16) {
         let peers = ACTIVE_PEERS.lock().unwrap();
         if peers.contains_key(&peer_id) {
             return;
+        }
+    }
+    // Check registry status to avoid concurrent attempts
+    {
+        let registry = crate::core::connection_registry::REGISTRY.lock().unwrap();
+        if let Some(peer) = registry.get(&peer_id) {
+            if peer.connection_status == "Connecting" {
+                return;
+            }
         }
     }
 
@@ -338,6 +348,7 @@ pub async fn connect_to_peer(peer_id: String, ip: String, port: u16) {
 
                         register_session_key(device_id.clone(), session_key);
                         add_or_update_peer(device_id.clone(), peer.device_name, ip.clone(), port);
+                        crate::core::trust_store::update_trusted_device_ip_port(&device_id, ip.clone(), port);
                         
                         device_id
                     } else {

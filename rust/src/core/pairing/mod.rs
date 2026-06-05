@@ -111,7 +111,11 @@ pub async fn initiate_pairing_flow(peer_id: String, ip: String, port: u16) {
                                 public_signing_key: signing_arr,
                                 public_dh_key: dh_arr,
                                 paired_at: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs(),
+                                last_ip: Some(ip.clone()),
+                                last_port: Some(port),
                             });
+
+                            crate::core::reconnect::trigger_reconnect();
 
                             emit_event(SyncEvent::ConnectionStatus {
                                 connected: false,
@@ -149,6 +153,7 @@ pub async fn handle_pairing_flow(
     req_device_name: String,
     pub_sig_base64: String,
     pub_dh_base64: String,
+    ip: String,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let Ok(sig_bytes) = BASE64.decode(pub_sig_base64) else { return Ok(()); };
     let Ok(dh_bytes) = BASE64.decode(pub_dh_base64) else { return Ok(()); };
@@ -185,7 +190,11 @@ pub async fn handle_pairing_flow(
             public_signing_key: signing_arr,
             public_dh_key: dh_arr,
             paired_at: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs(),
+            last_ip: Some(ip),
+            last_port: Some(0),
         });
+
+        crate::core::reconnect::trigger_reconnect();
 
         let resp = PairingMessage::PairingResponse {
             status: "approved".to_string(),

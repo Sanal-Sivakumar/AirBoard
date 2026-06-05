@@ -13,6 +13,10 @@ pub struct TrustedDevice {
     pub public_signing_key: [u8; 32],
     pub public_dh_key: [u8; 32],
     pub paired_at: u64,
+    #[serde(default)]
+    pub last_ip: Option<String>,
+    #[serde(default)]
+    pub last_port: Option<u16>,
 }
 
 pub static TRUST_STORE: Lazy<Mutex<HashMap<String, TrustedDevice>>> = Lazy::new(|| Mutex::new(HashMap::new()));
@@ -79,4 +83,14 @@ pub fn get_trusted_device(device_id: &str) -> Option<TrustedDevice> {
 pub fn get_all_trusted_devices() -> Vec<TrustedDevice> {
     let store = TRUST_STORE.lock().unwrap();
     store.values().cloned().collect()
+}
+
+pub fn update_trusted_device_ip_port(device_id: &str, ip: String, port: u16) {
+    let mut store = TRUST_STORE.lock().unwrap();
+    if let Some(device) = store.get_mut(device_id) {
+        device.last_ip = Some(ip);
+        device.last_port = Some(port);
+        drop(store);
+        save_trust_store();
+    }
 }
