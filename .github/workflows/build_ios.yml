@@ -32,13 +32,13 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
-      - name: Build Flutter iOS (Unsigned)
-        run: flutter build ios --release --no-codesign
+      - name: Build Flutter iOS (Simulator)
+        run: flutter build ios --release --simulator
 
       - name: Package IPA
         run: |
           mkdir -p Payload
-          mv build/ios/iphoneos/Runner.app Payload/
+          mv build/ios/iphonesimulator/Runner.app Payload/
           zip -r AirBoard-unsigned.ipa Payload
 
       - name: Upload IPA Artifact
