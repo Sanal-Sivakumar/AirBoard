@@ -1,0 +1,4 @@
+analyzer:
+  errors:
+    # withOpacity is still valid; only deprecated on bleeding-edge SDKs.
+    deprecated_member_use: ignore

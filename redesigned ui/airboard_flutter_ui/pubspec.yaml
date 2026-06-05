@@ -1,0 +1,16 @@
+name: airboard_ui
+description: AirBoard — Aurora Liquid Glass UI module.
+publish_to: "none"
+version: 1.0.0
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_fonts: ^6.2.1   # Inter + JetBrains Mono
+
+flutter:
+  uses-material-design: true

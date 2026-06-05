@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="aurora">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AirBoard — Liquid Glass (interactive)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --glass:rgba(255,255,255,.055);
+    --glass-strong:rgba(255,255,255,.085);
+    --glass-hi:rgba(255,255,255,.14);
+    --stroke:rgba(255,255,255,.10);
+    --stroke-hi:rgba(255,255,255,.22);
+    --text:#f4f6fb; --text-2:rgba(244,246,251,.62); --text-3:rgba(244,246,251,.38);
+    --ok:#34d399; --warn:#fbbf24; --danger:#f87171;
+    --r-lg:26px; --r-md:18px; --r-sm:12px; --r-pill:999px;
+    --ease:cubic-bezier(.22,1,.36,1); --blur:30px;
+  }
+  /* ===== THEME VARIANTS ===== */
+  html[data-theme="aurora"]{
+    --bg-0:#06070d; --accent:#6ea8ff; --accent-2:#a78bfa;
+    --grad-accent:linear-gradient(135deg,#6ea8ff,#a78bfa);
+    --m1:#3b6ad6; --m2:#7c3aed; --m3:#0ea5a5; --glow:rgba(110,168,255,.6);
+  }
+  html[data-theme="mono"]{
+    --bg-0:#0a0a0c; --accent:#e8eaf0; --accent-2:#aeb4c2;
+    --grad-accent:linear-gradient(135deg,#f4f6fb,#aeb4c2);
+    --m1:#3a3f4d; --m2:#1f2330; --m3:#2a2f3a; --glow:rgba(255,255,255,.25);
+    --glass:rgba(255,255,255,.04); --stroke:rgba(255,255,255,.08);
+  }
+  html[data-theme="vivid"]{
+    --bg-0:#05060e; --accent:#22d3ee; --accent-2:#f472b6;
+    --grad-accent:linear-gradient(135deg,#22d3ee,#f472b6);
+    --m1:#0ea5e9; --m2:#db2777; --m3:#8b5cf6; --glow:rgba(34,211,238,.6);
+    --blur:34px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--text);background:var(--bg-0);-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .5s var(--ease)}
+
+  .mesh{position:fixed;inset:0;z-index:-1;overflow:hidden;background:var(--bg-0);transition:background .5s}
+  .mesh::before,.mesh::after,.blob{content:"";position:absolute;border-radius:50%;filter:blur(80px);opacity:.55;animation:float 22s var(--ease) infinite alternate;transition:background .5s}
+  .mesh::before{width:55vw;height:55vw;left:-12vw;top:-14vw;background:radial-gradient(circle,var(--m1),transparent 70%)}
+  .mesh::after{width:50vw;height:50vw;right:-12vw;bottom:-14vw;background:radial-gradient(circle,var(--m2),transparent 70%);animation-delay:-7s}
+  .blob{width:40vw;height:40vw;left:40vw;top:55vh;background:radial-gradient(circle,var(--m3),transparent 70%);opacity:.35;animation-delay:-13s}
+  @keyframes float{to{transform:translate3d(4vw,-3vw,0) scale(1.12)}}
+
+  .wrap{max-width:1240px;margin:0 auto;padding:34px 28px 80px}
+  .pagehead{text-align:center;margin-bottom:24px}
+  .pagehead h1{font-size:30px;font-weight:600;letter-spacing:-.02em}
+  .pagehead h1 b{background:var(--grad-accent);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .pagehead p{color:var(--text-2);margin-top:8px;font-size:14px}
+
+  /* variant switcher */
+  .variants{display:flex;gap:8px;justify-content:center;margin:18px 0 40px;flex-wrap:wrap}
+  .variants button{font-family:inherit;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-2);
+    padding:9px 18px;border-radius:var(--r-pill);background:var(--glass);border:1px solid var(--stroke);
+    backdrop-filter:blur(20px);transition:.25s var(--ease);display:flex;align-items:center;gap:9px}
+  .variants button:hover{color:var(--text);background:var(--glass-hi)}
+  .variants button.active{color:var(--text);border-color:var(--stroke-hi);background:var(--glass-strong);box-shadow:inset 0 1px 0 var(--stroke-hi)}
+  .variants button i{width:13px;height:13px;border-radius:50%;display:block}
+  .sw-aurora{background:linear-gradient(135deg,#6ea8ff,#a78bfa)}
+  .sw-mono{background:linear-gradient(135deg,#f4f6fb,#aeb4c2)}
+  .sw-vivid{background:linear-gradient(135deg,#22d3ee,#f472b6)}
+
+  .stage{display:flex;gap:54px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+  .caption{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);text-align:center;margin-bottom:16px;font-weight:600}
+
+  .glass{position:relative;background:var(--glass);border:1px solid var(--stroke);border-radius:var(--r-md);
+    backdrop-filter:blur(var(--blur)) saturate(160%);-webkit-backdrop-filter:blur(var(--blur)) saturate(160%);
+    box-shadow:0 18px 50px -18px rgba(0,0,0,.65),inset 0 1px 0 var(--stroke-hi),inset 0 -1px 0 rgba(0,0,0,.25)}
+  .glass::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(160deg,rgba(255,255,255,.10),transparent 38%);opacity:.7}
+
+  .screen-view{display:none;animation:fade .4s var(--ease)}
+  .screen-view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* ---------- DESKTOP ---------- */
+  .desktop{width:760px;max-width:100%;border-radius:var(--r-lg);overflow:hidden;
+    background:linear-gradient(180deg,rgba(20,22,33,.7),rgba(10,11,18,.7));border:1px solid var(--stroke);
+    backdrop-filter:blur(var(--blur));box-shadow:0 40px 90px -30px rgba(0,0,0,.8),inset 0 1px 0 var(--stroke-hi);transition:.45s var(--ease)}
+  .desktop.min{transform:scale(.6);opacity:.4;pointer-events:none}
+  .desktop.max{width:900px}
+  .titlebar{height:46px;display:flex;align-items:center;gap:8px;padding:0 16px;border-bottom:1px solid var(--stroke);position:relative}
+  .traffic{display:flex;gap:8px}.traffic i{width:12px;height:12px;border-radius:50%;display:block;cursor:pointer;transition:.2s}
+  .traffic i:hover{transform:scale(1.18)}
+  .traffic i:nth-child(1){background:#ff5f57}.traffic i:nth-child(2){background:#febc2e}.traffic i:nth-child(3){background:#28c840}
+  .titlebar span{position:absolute;left:0;right:0;text-align:center;font-size:13px;color:var(--text-2);font-weight:500}
+  .dlayout{display:grid;grid-template-columns:212px 1fr;min-height:520px}
+
+  .side{padding:22px 14px;border-right:1px solid var(--stroke);display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:11px;padding:4px 8px 20px}
+  .brand .logo{width:34px;height:34px;border-radius:10px;background:var(--grad-accent);display:grid;place-items:center;box-shadow:0 6px 18px -4px var(--glow)}
+  .brand .logo svg{width:19px;height:19px;color:#0a0b12}
+  .brand b{font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .nav{display:flex;flex-direction:column;gap:4px}
+  .nav a{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:var(--r-sm);color:var(--text-2);font-size:14px;font-weight:500;cursor:pointer;transition:.25s var(--ease);border:1px solid transparent}
+  .nav a svg{width:18px;height:18px}
+  .nav a:hover{background:var(--glass);color:var(--text)}
+  .nav a.active{background:var(--glass-strong);color:var(--text);border-color:var(--stroke-hi);box-shadow:inset 0 1px 0 var(--stroke-hi)}
+  .nav a.active svg{color:var(--accent)}
+  .side .spacer{flex:1}
+  .statuschip{display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:var(--r-pill);background:var(--glass);border:1px solid var(--stroke);font-size:12px;font-weight:600;letter-spacing:.04em}
+  .statuschip .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.5)}70%{box-shadow:0 0 0 9px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+
+  .main{padding:24px 26px;overflow:auto}
+  .statusbar{display:flex;align-items:center;gap:24px;padding:14px 20px;margin-bottom:22px;border-radius:var(--r-md)}
+  .statusbar .stat{display:flex;flex-direction:column;gap:2px}
+  .statusbar .stat .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);font-weight:600}
+  .statusbar .stat .v{font-size:19px;font-weight:600;letter-spacing:-.01em}
+  .statusbar .sep{width:1px;height:30px;background:var(--stroke)}
+  .ee{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--ok);padding:7px 13px;border-radius:var(--r-pill);background:rgba(52,211,153,.10);border:1px solid rgba(52,211,153,.30)}
+  .ee .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+  .sectitle{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);font-weight:600;margin:6px 2px 12px;display:flex;justify-content:space-between;align-items:center}
+  .sectitle .count{color:var(--accent)}
+
+  .devlist{display:flex;flex-direction:column;gap:10px}
+  .dev{display:flex;align-items:center;gap:14px;padding:15px 18px;border-radius:var(--r-md);cursor:pointer;transition:.28s var(--ease)}
+  .dev:hover{background:var(--glass-hi);transform:translateY(-1px)}
+  .dev .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none;background:var(--glass-strong);border:1px solid var(--stroke)}
+  .dev .ic svg{width:21px;height:21px;color:var(--accent)}
+  .dev .meta{flex:1;min-width:0}
+  .dev .meta b{font-size:15px;font-weight:600;display:block}
+  .dev .meta small{font-size:12.5px;color:var(--text-2);font-variant-numeric:tabular-nums}
+  .badge{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;border-radius:var(--r-pill);flex:none;border:1px solid transparent}
+  .badge.paired{color:var(--ok);background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.28)}
+  .badge.paired svg{width:13px;height:13px}
+  .badge.pair{color:var(--warn);background:rgba(251,191,36,.10);border-color:rgba(251,191,36,.30);cursor:pointer;transition:.2s}
+  .badge.pair:hover{background:rgba(251,191,36,.20)}
+  .iconbtn{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;cursor:pointer;color:var(--text-3);background:transparent;border:1px solid transparent;transition:.2s}
+  .iconbtn:hover{color:var(--danger);background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.25)}
+  .iconbtn svg{width:17px;height:17px}
+
+  .connect{display:flex;gap:10px;margin:18px 0 6px}
+  .connect input{flex:1;background:var(--glass);border:1px solid var(--stroke);border-radius:var(--r-sm);padding:13px 16px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:.2s}
+  .connect input::placeholder{color:var(--text-3)}
+  .connect input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glass-hi)}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#0a0b12;padding:13px 20px;border-radius:var(--r-sm);background:var(--grad-accent);box-shadow:0 8px 22px -6px var(--glow);transition:.22s var(--ease)}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 12px 28px -6px var(--glow)}
+  .btn.ghost{background:var(--glass-strong);color:var(--text);box-shadow:none;border:1px solid var(--stroke)}
+  .btn.ghost:hover{background:var(--glass-hi)}
+  .btn.ok{background:linear-gradient(135deg,#34d399,#10b981);color:#062018;box-shadow:0 8px 22px -6px rgba(52,211,153,.5)}
+  .btn svg{width:16px;height:16px}
+
+  /* small inline tags + online dot on the device icon */
+  .tag{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;margin-left:7px;vertical-align:middle}
+  .tag.relay{color:var(--accent);background:var(--glass-hi);border:1px solid var(--stroke-hi)}
+  .tag.idle{color:var(--text-3);background:var(--glass);border:1px solid var(--stroke)}
+  .dev .ic,.m-dev .ic{position:relative}
+  .dev .ic.on::before,.m-dev .ic.on::before{content:"";position:absolute;top:-3px;right:-3px;width:11px;height:11px;border-radius:50%;background:var(--ok);border:2px solid var(--bg-0);box-shadow:0 0 8px rgba(52,211,153,.8)}
+
+  /* clipboard history rows */
+  .clip{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--r-md);cursor:pointer;transition:.25s var(--ease)}
+  .clip:hover{background:var(--glass-hi)}
+  .clip .ci{width:36px;height:36px;border-radius:10px;flex:none;display:grid;place-items:center;background:var(--glass-strong);border:1px solid var(--stroke);color:var(--accent)}
+  .clip .ci svg{width:17px;height:17px}
+  .clip .ct{flex:1;min-width:0}
+  .clip .ct b{font-size:13.5px;font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'JetBrains Mono',monospace}
+  .clip .ct small{font-size:11.5px;color:var(--text-3)}
+  .clip .copy{width:34px;height:34px;border-radius:10px;flex:none;display:grid;place-items:center;color:var(--text-3);border:1px solid transparent;transition:.2s}
+  .clip:hover .copy{color:var(--accent);background:var(--glass-strong);border-color:var(--stroke)}
+  .clip .copy svg{width:16px;height:16px}
+  .m-clip{display:flex;align-items:center;gap:11px;padding:12px;border-radius:16px;margin-bottom:9px;transition:.2s}
+  .m-clip:active{transform:scale(.985)}
+  .m-clip .ci{width:34px;height:34px;border-radius:10px;flex:none;display:grid;place-items:center;background:var(--glass-strong);border:1px solid var(--stroke);color:var(--accent)}
+  .m-clip .ci svg{width:16px;height:16px}
+  .m-clip .ct{flex:1;min-width:0}
+  .m-clip .ct b{font-size:12.5px;font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'JetBrains Mono',monospace}
+  .m-clip .ct small{font-size:10.5px;color:var(--text-3)}
+
+  .empty{text-align:center;padding:54px 20px;color:var(--text-3)}
+  .empty svg{width:40px;height:40px;margin-bottom:14px;opacity:.6}
+  .empty p{font-size:14px}
+
+  .field{padding:18px 20px;border-radius:var(--r-md);display:flex;align-items:center;gap:18px;margin-bottom:14px}
+  .field .lbl{flex:1}
+  .field .lbl span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);font-weight:600;display:block;margin-bottom:6px}
+  .field input.name{background:transparent;border:none;color:var(--text);font-size:17px;font-weight:600;outline:none;width:100%;font-family:inherit}
+  .toggle{width:50px;height:30px;border-radius:999px;background:var(--glass-strong);border:1px solid var(--stroke);position:relative;cursor:pointer;transition:.3s var(--ease);flex:none}
+  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.3s var(--ease);box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  .toggle.on{background:linear-gradient(135deg,#34d399,#10b981);border-color:transparent}
+  .toggle.on::after{left:23px}
+  .metrics{border-radius:var(--r-md);overflow:hidden}
+  .metric{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid var(--stroke);gap:12px}
+  .metric:last-child{border-bottom:none}
+  .metric .k{color:var(--text-2);font-size:14px;flex:none}
+  .metric .v{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--text);cursor:pointer;transition:.2s}
+  .metric .v:hover{color:var(--accent)}
+  .metric .v.mono-sm{font-size:11.5px;color:var(--text-2)}
+
+  /* ---------- MOBILE ---------- */
+  .phone{width:340px;height:710px;border-radius:50px;padding:13px;position:relative;background:linear-gradient(160deg,#1b1d28,#0a0b12);box-shadow:0 50px 110px -30px rgba(0,0,0,.85),inset 0 1px 0 var(--stroke-hi),0 0 0 1px rgba(255,255,255,.05)}
+  .screen{width:100%;height:100%;border-radius:38px;overflow:hidden;position:relative;background:var(--bg-0);display:flex;flex-direction:column;transition:background .5s}
+  .island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#000;border-radius:999px;z-index:5}
+  .m-top{padding:46px 20px 8px}
+  .m-head{display:flex;align-items:center;gap:13px}
+  .m-head .logo{width:46px;height:46px;border-radius:14px;background:var(--grad-accent);display:grid;place-items:center;box-shadow:0 8px 22px -5px var(--glow);flex:none}
+  .m-head .logo svg{width:24px;height:24px;color:#0a0b12}
+  .m-head .t b{font-size:18px;font-weight:600;display:block}
+  .m-head .t small{font-size:12px;color:var(--text-2);font-family:'JetBrains Mono',monospace}
+  .m-ee{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:var(--ok);padding:6px 10px;border-radius:999px;background:rgba(52,211,153,.10);border:1px solid rgba(52,211,153,.30);flex:none}
+  .m-ee .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+  .m-body{flex:1;overflow:auto;padding:6px 18px 14px}
+  .m-body::-webkit-scrollbar{display:none}
+  .m-connect{display:flex;gap:9px;margin:14px 0 6px}
+  .m-connect input{flex:1;background:var(--glass);border:1px solid var(--stroke);border-radius:14px;padding:13px 14px;color:var(--text);font-size:14px;outline:none;font-family:inherit;min-width:0}
+  .m-connect input::placeholder{color:var(--text-3)}
+  .m-connect .btn{padding:13px 16px}
+  .m-sectitle{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);font-weight:600;margin:18px 4px 11px}
+  .m-dev{display:flex;align-items:center;gap:12px;padding:14px;border-radius:18px;margin-bottom:10px;transition:.25s var(--ease)}
+  .m-dev:active{transform:scale(.985)}
+  .m-dev .ic{width:40px;height:40px;border-radius:12px;background:var(--glass-strong);border:1px solid var(--stroke);display:grid;place-items:center;flex:none}
+  .m-dev .ic svg{width:20px;height:20px;color:var(--accent)}
+  .m-dev .meta{flex:1;min-width:0}
+  .m-dev .meta b{font-size:14.5px;font-weight:600;display:block}
+  .m-dev .meta small{font-size:11.5px;color:var(--text-2)}
+  .m-field{padding:15px;border-radius:16px;margin-bottom:12px}
+  .m-field .lbl span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);font-weight:600;display:block;margin-bottom:6px}
+  .m-field-row{display:flex;align-items:center;gap:14px}
+  .m-field input.name{background:transparent;border:none;color:var(--text);font-size:16px;font-weight:600;outline:none;width:100%;font-family:inherit}
+  .m-metric{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;border-bottom:1px solid var(--stroke);gap:10px}
+  .m-metric:last-child{border-bottom:none}
+  .m-metric .k{color:var(--text-2);font-size:13px;flex:none}
+  .m-metric .v{font-size:11.5px;font-family:'JetBrains Mono',monospace;color:var(--text);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tabbar{margin:6px 16px 16px;padding:8px;border-radius:24px;display:flex;gap:6px}
+  .tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;border-radius:16px;color:var(--text-3);font-size:11px;font-weight:600;cursor:pointer;transition:.25s var(--ease)}
+  .tabbar a svg{width:21px;height:21px}
+  .tabbar a.active{color:var(--text);background:var(--glass-strong);border:1px solid var(--stroke-hi)}
+  .tabbar a.active svg{color:var(--accent)}
+
+  /* ---------- PAIRING MODAL ---------- */
+  .overlay{position:absolute;inset:0;background:rgba(4,5,10,.55);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:20;padding:20px;border-radius:inherit}
+  .overlay.show{display:flex;animation:fade .3s var(--ease)}
+  .sheet{width:100%;max-width:380px;border-radius:24px;padding:24px;text-align:left}
+  .sheet .sh-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .sheet .sh-ic{width:42px;height:42px;border-radius:12px;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.3);display:grid;place-items:center;color:var(--warn);flex:none}
+  .sheet .sh-ic svg{width:22px;height:22px}
+  .sheet h3{font-size:18px;font-weight:600}
+  .sheet .sub{color:var(--text-2);font-size:13.5px;margin-bottom:16px}
+  .sheet .who{display:flex;align-items:center;gap:12px;padding:13px;border-radius:14px;margin-bottom:16px}
+  .sheet .who .ic{width:38px;height:38px;border-radius:11px;background:var(--glass-strong);border:1px solid var(--stroke);display:grid;place-items:center;color:var(--accent)}
+  .sheet .who .ic svg{width:19px;height:19px}
+  .sheet .who b{font-size:14.5px}.sheet .who small{font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace}
+  .fp-label{font-size:12px;color:var(--text-2);font-weight:600;margin-bottom:8px}
+  .fp{padding:14px;border-radius:14px;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin-bottom:14px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--warn);letter-spacing:.05em}
+  .warnbar{display:flex;gap:9px;align-items:flex-start;padding:11px 13px;border-radius:12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);font-size:12px;color:var(--warn);line-height:1.4;margin-bottom:18px}
+  .warnbar svg{width:15px;height:15px;flex:none;margin-top:1px}
+  .sheet .actions{display:flex;gap:10px;justify-content:flex-end}
+
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;display:flex;align-items:center;gap:10px;padding:13px 20px;border-radius:var(--r-pill);font-size:14px;font-weight:600;z-index:50;transition:.4s var(--ease)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast svg{width:17px;height:17px;color:var(--ok)}
+  .flash{animation:flashrow 1.2s var(--ease)}
+  @keyframes flashrow{0%,100%{box-shadow:0 18px 50px -18px rgba(0,0,0,.65),inset 0 1px 0 var(--stroke-hi)}40%{box-shadow:0 0 0 2px var(--accent),0 0 24px -2px var(--glow)}}
+  .removing{animation:rm .35s var(--ease) forwards}
+  @keyframes rm{to{opacity:0;transform:translateX(30px);height:0;margin:0;padding-top:0;padding-bottom:0}}
+</style>
+</head>
+<body>
+<div class="mesh"><span class="blob"></span></div>
+
+<div class="wrap">
+  <div class="pagehead">
+    <h1>AirBoard · <b>Liquid Glass</b></h1>
+    <p>Fully interactive — switch tabs, pair/unpair devices, toggle settings, try the window controls.</p>
+  </div>
+
+  <div class="variants">
+    <button class="active" onclick="setTheme('aurora',this)"><i class="sw-aurora"></i>Aurora</button>
+    <button onclick="setTheme('mono',this)"><i class="sw-mono"></i>Mono Minimal</button>
+    <button onclick="setTheme('vivid',this)"><i class="sw-vivid"></i>Vivid</button>
+  </div>
+
+  <div class="stage">
+
+    <!-- ============ DESKTOP ============ -->
+    <div>
+      <div class="caption">Desktop</div>
+      <div class="desktop" id="desktopWin">
+        <div class="titlebar">
+          <div class="traffic">
+            <i title="close" onclick="winClose()"></i>
+            <i title="minimize" onclick="winMin()"></i>
+            <i title="maximize" onclick="winMax()"></i>
+          </div>
+          <span>AirBoard</span>
+        </div>
+        <div class="dlayout">
+          <aside class="side">
+            <div class="brand">
+              <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg></div>
+              <b>AirBoard</b>
+            </div>
+            <nav class="nav">
+              <a class="active" data-d="devices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Devices</a>
+              <a data-d="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
+            </nav>
+            <div class="spacer"></div>
+            <div class="statuschip"><span class="dot"></span>SECURE · <span id="d-peercount">2</span> PEERS</div>
+          </aside>
+
+          <main class="main">
+            <!-- DEVICES -->
+            <section class="screen-view active" data-screen="devices">
+              <div class="statusbar glass">
+                <div class="stat"><span class="k">Discovered</span><span class="v" id="d-disc">1</span></div>
+                <div class="sep"></div>
+                <div class="stat"><span class="k">Trusted</span><span class="v" id="d-trust">2</span></div>
+                <div class="sep"></div>
+                <div class="stat"><span class="k">Last sync</span><span class="v">8s ago</span></div>
+                <div class="ee"><span class="dot"></span>E2EE ACTIVE</div>
+              </div>
+              <div class="connect">
+                <input id="d-ip" placeholder="Add device by IP  ·  e.g. 192.168.43.10" />
+                <button class="btn" onclick="manualConnect('d')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg>Connect</button>
+              </div>
+              <div class="sectitle"><span>Paired</span><span class="count" id="d-pcount">3</span></div>
+              <div class="devlist" id="d-paired">
+                <div class="dev glass" data-name="Android Phone">
+                  <div class="ic on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
+                  <div class="meta"><b>Android Phone <span class="tag relay">relay hub</span></b><small>10.113.111.19 · synced now</small></div>
+                  <span class="badge paired"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Paired</span>
+                  <div class="iconbtn" title="Unpair" onclick="unpair(this,'d')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+                </div>
+                <div class="dev glass" data-name="iPad Client">
+                  <div class="ic on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="12" rx="2"/><path d="M8 21h8M12 15v6"/></svg></div>
+                  <div class="meta"><b>iPad Client</b><small>10.113.111.136 · synced 8s ago</small></div>
+                  <span class="badge paired"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Paired</span>
+                  <div class="iconbtn" title="Unpair" onclick="unpair(this,'d')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+                </div>
+                <div class="dev glass" data-name="MacBook Pro">
+                  <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg></div>
+                  <div class="meta"><b>MacBook Pro <span class="tag idle">idle</span></b><small>10.113.111.74 · synced 3m ago</small></div>
+                  <span class="badge paired"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Paired</span>
+                  <div class="iconbtn" title="Unpair" onclick="unpair(this,'d')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+                </div>
+              </div>
+              <div class="sectitle" style="margin-top:22px"><span>Discovered nearby</span><span class="count" id="d-dcount">2</span></div>
+              <div class="devlist" id="d-discovered">
+                <div class="dev glass" data-name="Windows PC">
+                  <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8"/></svg></div>
+                  <div class="meta"><b>Windows PC</b><small>10.19.75.156 · discovered</small></div>
+                  <span class="badge pair" onclick="openPair('Windows PC','desktop')">Pair device</span>
+                </div>
+                <div class="dev glass" data-name="Galaxy Tab S9">
+                  <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M11 18h2"/></svg></div>
+                  <div class="meta"><b>Galaxy Tab S9</b><small>10.19.75.182 · discovered</small></div>
+                  <span class="badge pair" onclick="openPair('Galaxy Tab S9','desktop')">Pair device</span>
+                </div>
+              </div>
+
+              <div class="sectitle" style="margin-top:24px"><span>Clipboard history</span><span class="count" id="d-hcount">4</span></div>
+              <div class="devlist" id="d-history"></div>
+            </section>
+
+            <!-- SETTINGS -->
+            <section class="screen-view" data-screen="settings">
+              <div class="sectitle"><span>Device configuration</span></div>
+              <div class="field glass">
+                <div class="lbl"><span>Local device name</span><input class="name" value="Linux PC" /></div>
+                <div style="text-align:center"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);font-weight:600;display:block;margin-bottom:8px">Secure sync</span><div class="toggle on" onclick="toggleSecure(this)"></div></div>
+              </div>
+              <div class="sectitle" style="margin-top:20px"><span>System metrics</span></div>
+              <div class="metrics glass">
+                <div class="metric"><span class="k">LAN IP Address</span><span class="v" onclick="copyVal(this)">192.168.10.240</span></div>
+                <div class="metric"><span class="k">Device ID</span><span class="v mono-sm" onclick="copyVal(this)">637ab492-3c28-4fba-ad49-2591eb2daa40</span></div>
+                <div class="metric"><span class="k">Last network sync</span><span class="v">00:08:50</span></div>
+                <div class="metric"><span class="k">E2EE Fingerprint</span><span class="v mono-sm" onclick="copyVal(this)">ED:76:A1:EC:A6:4B:7B:61:8E…</span></div>
+              </div>
+            </section>
+          </main>
+        </div>
+        <div class="overlay" id="ov-desktop"><div class="sheet glass" id="sheet-desktop"></div></div>
+      </div>
+    </div>
+
+    <!-- ============ MOBILE ============ -->
+    <div>
+      <div class="caption">Mobile</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="m-top">
+            <div class="m-head">
+              <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg></div>
+              <div class="t"><b>This Phone</b><small>D3:0D:CF:34…</small></div>
+              <div class="m-ee"><span class="dot"></span>E2EE</div>
+            </div>
+          </div>
+          <div class="m-body">
+            <!-- DEVICES -->
+            <section class="screen-view active" data-screen="devices">
+              <div class="m-connect">
+                <input id="m-ip" placeholder="Enter IP…" />
+                <button class="btn" onclick="manualConnect('m')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg></button>
+              </div>
+              <div class="m-sectitle">Paired</div>
+              <div id="m-paired">
+                <div class="m-dev glass" data-name="iPad Client">
+                  <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="12" rx="2"/><path d="M8 21h8M12 15v6"/></svg></div>
+                  <div class="meta"><b>iPad Client</b><small>synced now</small></div>
+                  <span class="badge paired"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                  <div class="iconbtn" title="Unpair" onclick="unpair(this,'m')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+                </div>
+                <div class="m-dev glass" data-name="Linux PC (hub)">
+                  <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8"/></svg></div>
+                  <div class="meta"><b>Linux PC <span class="tag relay">relay</span></b><small>via mesh · 12s ago</small></div>
+                  <span class="badge paired"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                  <div class="iconbtn" title="Unpair" onclick="unpair(this,'m')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+                </div>
+              </div>
+              <div class="m-sectitle">Discovered</div>
+              <div id="m-discovered">
+                <div class="m-dev glass" data-name="Windows PC">
+                  <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8"/></svg></div>
+                  <div class="meta"><b>Windows PC</b><small>10.19.75.156</small></div>
+                  <span class="badge pair" onclick="openPair('Windows PC','mobile')">Pair</span>
+                </div>
+                <div class="m-dev glass" data-name="MacBook Pro">
+                  <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg></div>
+                  <div class="meta"><b>MacBook Pro</b><small>10.19.75.91</small></div>
+                  <span class="badge pair" onclick="openPair('MacBook Pro','mobile')">Pair</span>
+                </div>
+              </div>
+              <div class="m-sectitle">Clipboard history</div>
+              <div id="m-history"></div>
+            </section>
+            <!-- SETTINGS -->
+            <section class="screen-view" data-screen="settings">
+              <div class="m-sectitle">Device configuration</div>
+              <div class="m-field glass">
+                <div class="lbl"><span>Local device name</span>
+                  <div class="m-field-row"><input class="name" value="This Phone" /><div class="toggle on" onclick="toggleSecure(this)"></div></div>
+                </div>
+              </div>
+              <div class="m-sectitle">System metrics</div>
+              <div class="metrics glass">
+                <div class="m-metric"><span class="k">LAN IP</span><span class="v">192.0.0.2</span></div>
+                <div class="m-metric"><span class="k">Device ID</span><span class="v">28208b6f-09eb-4345…</span></div>
+                <div class="m-metric"><span class="k">Last sync</span><span class="v">Never</span></div>
+                <div class="m-metric"><span class="k">Fingerprint</span><span class="v">D3:0D:CF:34:48…</span></div>
+              </div>
+            </section>
+          </div>
+          <nav class="tabbar glass">
+            <a class="active" data-m="devices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Devices</a>
+            <a data-m="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
+          </nav>
+          <div class="overlay" id="ov-mobile"><div class="sheet glass" id="sheet-mobile"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast glass" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span id="toast-msg"></span></div>
+
+<script>
+  function setTheme(name,btn){
+    document.documentElement.dataset.theme=name;
+    document.querySelectorAll('.variants button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    toast('Theme · '+btn.textContent.trim());
+  }
+
+  document.querySelectorAll('.nav a').forEach(a=>{a.onclick=()=>{document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('active'));a.classList.add('active');switchScreen('.desktop',a.dataset.d);};});
+  document.querySelectorAll('.tabbar a').forEach(a=>{a.onclick=()=>{document.querySelectorAll('.tabbar a').forEach(x=>x.classList.remove('active'));a.classList.add('active');switchScreen('.phone',a.dataset.m);};});
+  function switchScreen(root,name){document.querySelectorAll(root+' .screen-view').forEach(s=>s.classList.toggle('active',s.dataset.screen===name));}
+
+  function winClose(){const w=document.getElementById('desktopWin');w.style.transition='.3s var(--ease)';w.style.opacity='0';w.style.transform='scale(.94)';setTimeout(()=>{w.style.opacity='1';w.style.transform='none';toast('(close) — restored for demo');},700);}
+  function winMin(){const w=document.getElementById('desktopWin');w.classList.add('min');setTimeout(()=>w.classList.remove('min'),900);toast('Minimized');}
+  function winMax(){document.getElementById('desktopWin').classList.toggle('max');}
+
+  function toggleSecure(el){el.classList.toggle('on');toast(el.classList.contains('on')?'Secure Sync enabled':'Secure Sync paused');}
+
+  function manualConnect(who){const ip=document.getElementById(who+'-ip').value.trim();if(!ip){toast('Enter an IP first');return;}openPair('Device @ '+ip, who==='d'?'desktop':'mobile');}
+
+  function copyVal(el){toast('Copied · '+el.textContent.slice(0,24)+(el.textContent.length>24?'…':''));}
+
+  function recount(){
+    const dp=document.querySelectorAll('#d-paired .dev').length;
+    const dd=document.querySelectorAll('#d-discovered .dev').length;
+    document.getElementById('d-pcount').textContent=dp;
+    document.getElementById('d-dcount').textContent=dd;
+    document.getElementById('d-trust').textContent=dp;
+    document.getElementById('d-disc').textContent=dd;
+    document.getElementById('d-peercount').textContent=dp;
+  }
+
+  function unpair(btn,who){
+    const row=btn.closest('.dev,.m-dev');
+    const name=row.dataset.name;
+    row.classList.add('removing');
+    setTimeout(()=>{row.remove();recount();toast(name+' unpaired');},340);
+  }
+
+  const fpBlocks=['E7:D4:37:D4','32:C0:AB:EC','B8:DB:62:0F','8A:E0:3D:43','AB:FA:A0:64','70:ED:D1:FE','43:32:67:0F','22:72:6F:21'];
+  function openPair(name,target){
+    const ov=document.getElementById('ov-'+target), sheet=document.getElementById('sheet-'+target);
+    sheet.innerHTML=`
+      <div class="sh-head"><div class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div><h3>Pairing request</h3></div>
+      <div class="sub">A device wants to pair securely with you:</div>
+      <div class="who glass"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8"/></svg></div><div><b>${name}</b><br><small>ID: 28208b6f-09e…</small></div></div>
+      <div class="fp-label">Verify this fingerprint matches on both screens</div>
+      <div class="fp glass">${fpBlocks.map(b=>`<span>${b}</span>`).join('')}</div>
+      <div class="warnbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Only approve if the fingerprints are identical on both devices.</div>
+      <div class="actions"><button class="btn ghost" onclick="closePair('${target}')">Deny</button><button class="btn ok" onclick="approve('${name}','${target}')">Approve</button></div>`;
+    ov.classList.add('show');
+  }
+  function closePair(target){document.getElementById('ov-'+target).classList.remove('show');}
+  function approve(name,target){
+    closePair(target);
+    const root=target==='desktop'?'.desktop':'.phone';
+    const row=[...document.querySelectorAll(root+' [data-name]')].find(r=>r.dataset.name===name);
+    if(row){
+      const pairedList=document.querySelector(root+' [id$=paired]');
+      const badge=row.querySelector('.badge');
+      badge.className='badge paired';
+      badge.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'+(target==='desktop'?'Paired':'');
+      badge.onclick=null;
+      if(target==='desktop' && !row.querySelector('.iconbtn')){
+        const ib=document.createElement('div');ib.className='iconbtn';ib.title='Unpair';
+        ib.onclick=function(){unpair(ib,'d')};
+        ib.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+        row.appendChild(ib);
+      }
+      pairedList.appendChild(row);
+      row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1200);
+      recount();
+    }
+    toast(name+' paired · E2EE established');
+  }
+
+  let toastT;
+  function toast(msg){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+  /* ---------- clipboard history (mock data) ---------- */
+  const copyIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  const textIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2M9 21h6M12 3v18"/></svg>';
+  const linkIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
+  const codeIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg>';
+  let history=[
+    {t:'link', text:'https://github.com/airboard/p2p-mesh/pull/142', src:'iPad Client', time:'now'},
+    {t:'text', text:'Verification code: 884 213 — expires in 5 min', src:'Android Phone', time:'2m ago'},
+    {t:'code', text:'npx airboard connect --peer 10.19.75.156', src:'MacBook Pro', time:'9m ago'},
+    {t:'text', text:'Remember to rotate the X25519 keypair before demo', src:'Android Phone', time:'31m ago'},
+  ];
+  const iconFor=t=>t==='link'?linkIcon:t==='code'?codeIcon:textIcon;
+  function renderHistory(){
+    const big=document.getElementById('d-history'); const small=document.getElementById('m-history');
+    big.innerHTML=history.map((h,i)=>`<div class="clip glass" onclick="copyClip(${i})"><div class="ci">${iconFor(h.t)}</div><div class="ct"><b>${escapeHtml(h.text)}</b><small>from ${h.src} · ${h.time}</small></div><div class="copy">${copyIcon}</div></div>`).join('');
+    small.innerHTML=history.map((h,i)=>`<div class="m-clip glass" onclick="copyClip(${i})"><div class="ci">${iconFor(h.t)}</div><div class="ct"><b>${escapeHtml(h.text)}</b><small>${h.src} · ${h.time}</small></div></div>`).join('');
+    const hc=document.getElementById('d-hcount'); if(hc) hc.textContent=history.length;
+  }
+  function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+  function copyClip(i){toast('Copied to clipboard · synced to '+document.querySelectorAll('#d-paired .dev').length+' devices');}
+
+  /* live demo: a new clip arrives every ~9s and flashes in */
+  const incoming=[
+    {t:'text', text:'Meeting moved to 4:30 — conf room B', src:'iPad Client'},
+    {t:'link', text:'https://airboard.app/security/zero-trust', src:'MacBook Pro'},
+    {t:'code', text:'ChaCha20-Poly1305 · nonce reuse check passed', src:'Android Phone'},
+  ];
+  let inc=0;
+  setInterval(()=>{
+    const item=incoming[inc%incoming.length]; inc++;
+    history.unshift({...item,time:'now'});
+    if(history.length>6) history.pop();
+    history.forEach((h,k)=>{if(k>0 && h.time==='now') h.time='1m ago';});
+    renderHistory();
+    const first=document.querySelector('#d-history .clip'); if(first){first.classList.add('flash');setTimeout(()=>first.classList.remove('flash'),1200);}
+    const mfirst=document.querySelector('#m-history .m-clip'); if(mfirst){mfirst.classList.add('flash');setTimeout(()=>mfirst.classList.remove('flash'),1200);}
+  },9000);
+
+  renderHistory();
+</script>
+</body>
+</html>

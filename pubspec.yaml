@@ -18,6 +18,7 @@ dependencies:
   rust_lib_clipboard:
     path: rust_builder
   flutter_svg: ^2.1.0
+  google_fonts: ^6.3.0
 
 
 dev_dependencies:
