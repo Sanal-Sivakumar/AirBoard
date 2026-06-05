@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
@@ -240,6 +241,34 @@ class ClipTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isImage = item.type == ClipType.image;
+    Widget contentWidget;
+    if (isImage) {
+      final base64Part = item.text.startsWith("data:image/png;base64,")
+          ? item.text.substring(22)
+          : item.text;
+      contentWidget = Container(
+        height: compact ? 64 : 76,
+        margin: const EdgeInsets.only(top: 2, bottom: 4),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.memory(
+            base64Decode(base64Part),
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) =>
+                Text("Invalid Image Data", style: AB.mono.copyWith(fontSize: compact ? 12.5 : 13.5)),
+          ),
+        ),
+      );
+    } else {
+      contentWidget = Text(
+        item.text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AB.mono.copyWith(fontSize: compact ? 12.5 : 13.5),
+      );
+    }
+
     return GlassCard(
       hoverLift: !compact,
       padding: EdgeInsets.symmetric(
@@ -266,10 +295,7 @@ class ClipTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(item.text,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AB.mono.copyWith(fontSize: compact ? 12.5 : 13.5)),
+                contentWidget,
                 const SizedBox(height: 2),
                 Text(
                     compact

@@ -30,11 +30,27 @@ class ClipboardWriteActivity : Activity() {
                     if (clipboard.hasPrimaryClip()) {
                         val clip = clipboard.primaryClip
                         if (clip != null && clip.itemCount > 0) {
-                            val text = clip.getItemAt(0).text?.toString()
+                            val item = clip.getItemAt(0)
+                            val text = item.text?.toString()
+                            val uri = item.uri
                             if (!text.isNullOrEmpty()) {
                                 Log.i("ClipboardWriteActivity", "onWindowFocusChanged: read text from clipboard, invoking method channel")
                                 MainActivity.methodChannel?.invokeMethod("sendClipboardToPC", text)
                                 Toast.makeText(this, "Synced clipboard to PC!", Toast.LENGTH_SHORT).show()
+                            } else if (uri != null) {
+                                try {
+                                    val inputStream = contentResolver.openInputStream(uri)
+                                    val bytes = inputStream?.readBytes()
+                                    if (bytes != null) {
+                                        val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                                        val base64Str = "data:image/png;base64,$base64"
+                                        MainActivity.methodChannel?.invokeMethod("sendClipboardToPC", base64Str)
+                                        Toast.makeText(this, "Synced image to PC!", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("ClipboardWriteActivity", "onWindowFocusChanged: failed to read image URI", e)
+                                    Toast.makeText(this, "Failed to read image URI: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
                             } else {
                                 Log.i("ClipboardWriteActivity", "onWindowFocusChanged: clipboard content is empty")
                                 Toast.makeText(this, "Clipboard is empty!", Toast.LENGTH_SHORT).show()
@@ -42,7 +58,7 @@ class ClipboardWriteActivity : Activity() {
                         }
                     } else {
                         Log.i("ClipboardWriteActivity", "onWindowFocusChanged: no clip on clipboard")
-                        Toast.makeText(this, "No text on clipboard!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "No content on clipboard!", Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
                     Log.e("ClipboardWriteActivity", "onWindowFocusChanged: failed to read clipboard", e)

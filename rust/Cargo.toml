@@ -24,3 +24,4 @@ base64 = "0.21"
 
 [target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
 arboard = "3.4.0"
+png = "0.17"

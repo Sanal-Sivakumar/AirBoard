@@ -128,10 +128,27 @@ class SilentAudioManager {
     clipboardChannel.setMethodCallHandler({
       (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
       if call.method == "getClipboardText" {
-        result(UIPasteboard.general.string ?? "")
+        if let text = UIPasteboard.general.string {
+          result(text)
+        } else if let image = UIPasteboard.general.image,
+                  let data = image.pngData() {
+          let base64 = data.base64EncodedString()
+          result("data:image/png;base64,\(base64)")
+        } else {
+          result("")
+        }
       } else if call.method == "setClipboardText" {
         if let args = call.arguments as? Dictionary<String, Any>,
            let text = args["text"] as? String {
+          if text.hasPrefix("data:image/png;base64,") {
+            let base64 = String(text.dropFirst("data:image/png;base64,".count))
+            if let data = Data(base64Encoded: base64),
+               let image = UIImage(data: data) {
+              UIPasteboard.general.image = image
+              result(true)
+              return
+            }
+          }
           UIPasteboard.general.string = text
           result(true)
         } else {

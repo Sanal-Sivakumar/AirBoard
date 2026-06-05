@@ -33,13 +33,14 @@ class Device {
   });
 }
 
-enum ClipType { text, link, code }
+enum ClipType { text, link, code, image }
 
 extension ClipTypeIcon on ClipType {
   IconData get icon => switch (this) {
         ClipType.text => Icons.notes_rounded,
         ClipType.link => Icons.link_rounded,
         ClipType.code => Icons.code_rounded,
+        ClipType.image => Icons.image_rounded,
       };
 }
 
