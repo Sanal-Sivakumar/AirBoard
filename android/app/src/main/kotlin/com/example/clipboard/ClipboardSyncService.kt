@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.ClipboardManager
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
@@ -31,11 +32,46 @@ class ClipboardSyncService : Service() {
         
         const val ACTION_UPDATE_NOTIFICATION = "com.example.clipboard.UPDATE_NOTIFICATION"
         const val EXTRA_TEXT = "clipboard_text"
+
+        @Volatile
+        var ignoreNextClipChange = false
     }
 
     override fun onCreate() {
         super.onCreate()
         Log.i("ClipboardSyncService", "onCreate: initializing service")
+
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.addPrimaryClipChangedListener {
+            Log.i("ClipboardSyncService", "onPrimaryClipChanged callback triggered")
+            if (ignoreNextClipChange) {
+                Log.i("ClipboardSyncService", "onPrimaryClipChanged: ignoring change caused by local write")
+                ignoreNextClipChange = false
+                return@addPrimaryClipChangedListener
+            }
+
+            Log.i("ClipboardSyncService", "onPrimaryClipChanged: clipboard changed in background, auto-syncing...")
+            val hasOverlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Settings.canDrawOverlays(this)
+            } else {
+                true
+            }
+
+            if (hasOverlay) {
+                try {
+                    val writeIntent = Intent(this, ClipboardWriteActivity::class.java).apply {
+                        putExtra("action", "read_and_send")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                        action = "com.example.clipboard.READ_ACTION_" + System.currentTimeMillis()
+                    }
+                    startActivity(writeIntent)
+                } catch (e: Exception) {
+                    Log.e("ClipboardSyncService", "onPrimaryClipChanged: failed to start ClipboardWriteActivity", e)
+                }
+            } else {
+                Log.w("ClipboardSyncService", "onPrimaryClipChanged: cannot auto-sync in background without overlay permission")
+            }
+        }
 
         try {
             val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -210,7 +246,7 @@ class ClipboardSyncService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
             val sendAction = Notification.Action.Builder(
                 android.R.drawable.ic_menu_share,
-                "Sync to PC",
+                "Sync",
                 pendingSendIntent
             ).build()
             builder.addAction(sendAction)
@@ -226,7 +262,7 @@ class ClipboardSyncService : Service() {
             val action = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
                 Notification.Action.Builder(
                     android.R.drawable.ic_menu_edit,
-                    "Copy",
+                    "Sync",
                     pendingIntent
                 ).build()
             } else {

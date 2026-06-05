@@ -81,6 +81,14 @@ class MainActivity : FlutterActivity() {
                     }
                     result.success(null)
                 }
+                "updateLastSentText" -> {
+                    val text = call.argument<String>("text")
+                    if (text != null) {
+                        ClipboardWriteActivity.lastSentText = text
+                        ClipboardSyncService.ignoreNextClipChange = true
+                    }
+                    result.success(null)
+                }
                 else -> {
                     result.notImplemented()
                 }

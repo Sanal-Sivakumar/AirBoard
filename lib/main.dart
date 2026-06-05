@@ -333,6 +333,7 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
             });
           } else {
             Clipboard.setData(ClipboardData(text: text)).then((_) {
+              _serviceChannel.invokeMethod('updateLastSentText', {'text': text});
               _log("Sync board in: '${text.length > 25 ? '${text.substring(0, 25)}...' : text}'");
               setState(() {
                 _lastSyncTimestamp = DateTime.now().toIso8601String().substring(11, 19);
@@ -813,6 +814,7 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
 
           try {
             await api.sendLocalClipboardUpdate(content: text);
+            await _serviceChannel.invokeMethod('updateLastSentText', {'text': text});
           } catch (e) {
             _log("Clipboard broadcast error: $e");
           }

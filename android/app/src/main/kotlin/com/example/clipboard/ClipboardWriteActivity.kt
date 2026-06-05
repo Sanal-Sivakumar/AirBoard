@@ -11,6 +11,11 @@ import android.widget.Toast
 class ClipboardWriteActivity : Activity() {
     private var hasCopied = false
 
+    companion object {
+        @Volatile
+        var lastSentText: String? = null
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i("ClipboardWriteActivity", "onCreate: started helper activity")
@@ -32,9 +37,14 @@ class ClipboardWriteActivity : Activity() {
                         if (clip != null && clip.itemCount > 0) {
                             val text = clip.getItemAt(0).text?.toString()
                             if (!text.isNullOrEmpty()) {
-                                Log.i("ClipboardWriteActivity", "onWindowFocusChanged: read text from clipboard, invoking method channel")
-                                MainActivity.methodChannel?.invokeMethod("sendClipboardToPC", text)
-                                Toast.makeText(this, "Synced clipboard to PC!", Toast.LENGTH_SHORT).show()
+                                if (text == lastSentText) {
+                                    Log.i("ClipboardWriteActivity", "onWindowFocusChanged: text matches lastSentText, skipping sync")
+                                } else {
+                                    lastSentText = text
+                                    Log.i("ClipboardWriteActivity", "onWindowFocusChanged: read text from clipboard, invoking method channel")
+                                    MainActivity.methodChannel?.invokeMethod("sendClipboardToPC", text)
+                                    Toast.makeText(this, "Synced clipboard!", Toast.LENGTH_SHORT).show()
+                                }
                             } else {
                                 Log.i("ClipboardWriteActivity", "onWindowFocusChanged: clipboard content is empty")
                                 Toast.makeText(this, "Clipboard is empty!", Toast.LENGTH_SHORT).show()
@@ -54,6 +64,8 @@ class ClipboardWriteActivity : Activity() {
                 if (text != null) {
                     try {
                         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        lastSentText = text
+                        ClipboardSyncService.ignoreNextClipChange = true
                         val clip = ClipData.newPlainText("Synced Clipboard", text)
                         clipboard.setPrimaryClip(clip)
                         Log.i("ClipboardWriteActivity", "onWindowFocusChanged: successfully wrote to clipboard")
