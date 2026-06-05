@@ -603,6 +603,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 0:
         return SyncEvent_ClipboardUpdated(
           content: dco_decode_String(raw[1]),
+          isLocal: dco_decode_bool(raw[2]),
         );
       case 1:
         return SyncEvent_ConnectionStatus(
@@ -759,7 +760,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     switch (tag_) {
       case 0:
         var var_content = sse_decode_String(deserializer);
-        return SyncEvent_ClipboardUpdated(content: var_content);
+        var var_isLocal = sse_decode_bool(deserializer);
+        return SyncEvent_ClipboardUpdated(
+            content: var_content, isLocal: var_isLocal);
       case 1:
         var var_connected = sse_decode_bool(deserializer);
         var var_message = sse_decode_String(deserializer);
@@ -908,9 +911,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_sync_event(SyncEvent self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
-      case SyncEvent_ClipboardUpdated(content: final content):
+      case SyncEvent_ClipboardUpdated(
+          content: final content,
+          isLocal: final isLocal
+        ):
         sse_encode_i_32(0, serializer);
         sse_encode_String(content, serializer);
+        sse_encode_bool(isLocal, serializer);
       case SyncEvent_ConnectionStatus(
           connected: final connected,
           message: final message

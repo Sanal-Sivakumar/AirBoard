@@ -14,6 +14,7 @@ sealed class SyncEvent with _$SyncEvent {
 
   const factory SyncEvent.clipboardUpdated({
     required String content,
+    required bool isLocal,
   }) = SyncEvent_ClipboardUpdated;
   const factory SyncEvent.connectionStatus({
     required bool connected,

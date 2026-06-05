@@ -460,7 +460,7 @@ where
                                                 });
                                             }
 
-                                            emit_event(SyncEvent::ClipboardUpdated { content: content.clone() });
+                                            emit_event(SyncEvent::ClipboardUpdated { content: content.clone(), is_local: false });
 
                                             // Re-encrypt and forward to other trusted devices
                                             broadcast_clipboard_update(origin_device_id, packet_id, content, Some(peer_id_read.clone()));

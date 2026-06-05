@@ -4,7 +4,7 @@ use crate::core::utils::helpers::compute_hash;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum SyncEvent {
-    ClipboardUpdated { content: String },
+    ClipboardUpdated { content: String, is_local: bool },
     ConnectionStatus { connected: bool, message: String },
     Error { message: String },
 }

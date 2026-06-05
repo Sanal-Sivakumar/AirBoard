@@ -28,7 +28,7 @@ pub async fn start_desktop_clipboard_monitor() {
                     if is_new {
                         crate::core::clipboard_state::update_clipboard_state(content.clone(), timestamp, packet_id.clone());
                         broadcast_clipboard_update(SYNC_ENGINE.device_id.clone(), packet_id, content.clone(), None);
-                        emit_event(SyncEvent::ClipboardUpdated { content });
+                        emit_event(SyncEvent::ClipboardUpdated { content, is_local: true });
                     }
                 }
             }

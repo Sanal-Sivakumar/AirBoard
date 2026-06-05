@@ -18,21 +18,21 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$SyncEvent {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(String content) clipboardUpdated,
+    required TResult Function(String content, bool isLocal) clipboardUpdated,
     required TResult Function(bool connected, String message) connectionStatus,
     required TResult Function(String message) error,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(String content)? clipboardUpdated,
+    TResult? Function(String content, bool isLocal)? clipboardUpdated,
     TResult? Function(bool connected, String message)? connectionStatus,
     TResult? Function(String message)? error,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String content)? clipboardUpdated,
+    TResult Function(String content, bool isLocal)? clipboardUpdated,
     TResult Function(bool connected, String message)? connectionStatus,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -88,7 +88,7 @@ abstract class _$$SyncEvent_ClipboardUpdatedImplCopyWith<$Res> {
           $Res Function(_$SyncEvent_ClipboardUpdatedImpl) then) =
       __$$SyncEvent_ClipboardUpdatedImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({String content});
+  $Res call({String content, bool isLocal});
 }
 
 /// @nodoc
@@ -104,12 +104,17 @@ class __$$SyncEvent_ClipboardUpdatedImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? content = null,
+    Object? isLocal = null,
   }) {
     return _then(_$SyncEvent_ClipboardUpdatedImpl(
       content: null == content
           ? _value.content
           : content // ignore: cast_nullable_to_non_nullable
               as String,
+      isLocal: null == isLocal
+          ? _value.isLocal
+          : isLocal // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -117,14 +122,18 @@ class __$$SyncEvent_ClipboardUpdatedImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$SyncEvent_ClipboardUpdatedImpl extends SyncEvent_ClipboardUpdated {
-  const _$SyncEvent_ClipboardUpdatedImpl({required this.content}) : super._();
+  const _$SyncEvent_ClipboardUpdatedImpl(
+      {required this.content, required this.isLocal})
+      : super._();
 
   @override
   final String content;
+  @override
+  final bool isLocal;
 
   @override
   String toString() {
-    return 'SyncEvent.clipboardUpdated(content: $content)';
+    return 'SyncEvent.clipboardUpdated(content: $content, isLocal: $isLocal)';
   }
 
   @override
@@ -132,11 +141,12 @@ class _$SyncEvent_ClipboardUpdatedImpl extends SyncEvent_ClipboardUpdated {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$SyncEvent_ClipboardUpdatedImpl &&
-            (identical(other.content, content) || other.content == content));
+            (identical(other.content, content) || other.content == content) &&
+            (identical(other.isLocal, isLocal) || other.isLocal == isLocal));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, content);
+  int get hashCode => Object.hash(runtimeType, content, isLocal);
 
   @JsonKey(ignore: true)
   @override
@@ -148,33 +158,33 @@ class _$SyncEvent_ClipboardUpdatedImpl extends SyncEvent_ClipboardUpdated {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(String content) clipboardUpdated,
+    required TResult Function(String content, bool isLocal) clipboardUpdated,
     required TResult Function(bool connected, String message) connectionStatus,
     required TResult Function(String message) error,
   }) {
-    return clipboardUpdated(content);
+    return clipboardUpdated(content, isLocal);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(String content)? clipboardUpdated,
+    TResult? Function(String content, bool isLocal)? clipboardUpdated,
     TResult? Function(bool connected, String message)? connectionStatus,
     TResult? Function(String message)? error,
   }) {
-    return clipboardUpdated?.call(content);
+    return clipboardUpdated?.call(content, isLocal);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String content)? clipboardUpdated,
+    TResult Function(String content, bool isLocal)? clipboardUpdated,
     TResult Function(bool connected, String message)? connectionStatus,
     TResult Function(String message)? error,
     required TResult orElse(),
   }) {
     if (clipboardUpdated != null) {
-      return clipboardUpdated(content);
+      return clipboardUpdated(content, isLocal);
     }
     return orElse();
   }
@@ -217,11 +227,13 @@ class _$SyncEvent_ClipboardUpdatedImpl extends SyncEvent_ClipboardUpdated {
 }
 
 abstract class SyncEvent_ClipboardUpdated extends SyncEvent {
-  const factory SyncEvent_ClipboardUpdated({required final String content}) =
-      _$SyncEvent_ClipboardUpdatedImpl;
+  const factory SyncEvent_ClipboardUpdated(
+      {required final String content,
+      required final bool isLocal}) = _$SyncEvent_ClipboardUpdatedImpl;
   const SyncEvent_ClipboardUpdated._() : super._();
 
   String get content;
+  bool get isLocal;
   @JsonKey(ignore: true)
   _$$SyncEvent_ClipboardUpdatedImplCopyWith<_$SyncEvent_ClipboardUpdatedImpl>
       get copyWith => throw _privateConstructorUsedError;
@@ -305,7 +317,7 @@ class _$SyncEvent_ConnectionStatusImpl extends SyncEvent_ConnectionStatus {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(String content) clipboardUpdated,
+    required TResult Function(String content, bool isLocal) clipboardUpdated,
     required TResult Function(bool connected, String message) connectionStatus,
     required TResult Function(String message) error,
   }) {
@@ -315,7 +327,7 @@ class _$SyncEvent_ConnectionStatusImpl extends SyncEvent_ConnectionStatus {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(String content)? clipboardUpdated,
+    TResult? Function(String content, bool isLocal)? clipboardUpdated,
     TResult? Function(bool connected, String message)? connectionStatus,
     TResult? Function(String message)? error,
   }) {
@@ -325,7 +337,7 @@ class _$SyncEvent_ConnectionStatusImpl extends SyncEvent_ConnectionStatus {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String content)? clipboardUpdated,
+    TResult Function(String content, bool isLocal)? clipboardUpdated,
     TResult Function(bool connected, String message)? connectionStatus,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -451,7 +463,7 @@ class _$SyncEvent_ErrorImpl extends SyncEvent_Error {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(String content) clipboardUpdated,
+    required TResult Function(String content, bool isLocal) clipboardUpdated,
     required TResult Function(bool connected, String message) connectionStatus,
     required TResult Function(String message) error,
   }) {
@@ -461,7 +473,7 @@ class _$SyncEvent_ErrorImpl extends SyncEvent_Error {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(String content)? clipboardUpdated,
+    TResult? Function(String content, bool isLocal)? clipboardUpdated,
     TResult? Function(bool connected, String message)? connectionStatus,
     TResult? Function(String message)? error,
   }) {
@@ -471,7 +483,7 @@ class _$SyncEvent_ErrorImpl extends SyncEvent_Error {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String content)? clipboardUpdated,
+    TResult Function(String content, bool isLocal)? clipboardUpdated,
     TResult Function(bool connected, String message)? connectionStatus,
     TResult Function(String message)? error,
     required TResult orElse(),

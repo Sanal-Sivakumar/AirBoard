@@ -152,15 +152,18 @@ class _AmbientBackgroundState extends State<AmbientBackground>
       top: top == null ? null : top + dy,
       right: right == null ? null : right - dx,
       bottom: bottom == null ? null : bottom - dy,
-      child: ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-                colors: [c.withOpacity(op), c.withOpacity(0)]),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [
+              c.withOpacity(op),
+              c.withOpacity(op * 0.4),
+              c.withOpacity(0.0),
+            ],
+            stops: const [0.0, 0.45, 1.0],
           ),
         ),
       ),

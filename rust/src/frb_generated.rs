@@ -719,8 +719,10 @@ impl SseDecode for crate::core::sync_engine::engine::SyncEvent {
         match tag_ {
             0 => {
                 let mut var_content = <String>::sse_decode(deserializer);
+                let mut var_isLocal = <bool>::sse_decode(deserializer);
                 return crate::core::sync_engine::engine::SyncEvent::ClipboardUpdated {
                     content: var_content,
+                    is_local: var_isLocal,
                 };
             }
             1 => {
@@ -865,8 +867,13 @@ impl flutter_rust_bridge::IntoIntoDart<crate::core::connection_registry::Peer>
 impl flutter_rust_bridge::IntoDart for crate::core::sync_engine::engine::SyncEvent {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            crate::core::sync_engine::engine::SyncEvent::ClipboardUpdated { content } => {
-                [0.into_dart(), content.into_into_dart().into_dart()].into_dart()
+            crate::core::sync_engine::engine::SyncEvent::ClipboardUpdated { content, is_local } => {
+                [
+                    0.into_dart(),
+                    content.into_into_dart().into_dart(),
+                    is_local.into_into_dart().into_dart(),
+                ]
+                .into_dart()
             }
             crate::core::sync_engine::engine::SyncEvent::ConnectionStatus {
                 connected,
@@ -1005,9 +1012,10 @@ impl SseEncode for crate::core::sync_engine::engine::SyncEvent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::core::sync_engine::engine::SyncEvent::ClipboardUpdated { content } => {
+            crate::core::sync_engine::engine::SyncEvent::ClipboardUpdated { content, is_local } => {
                 <i32>::sse_encode(0, serializer);
                 <String>::sse_encode(content, serializer);
+                <bool>::sse_encode(is_local, serializer);
             }
             crate::core::sync_engine::engine::SyncEvent::ConnectionStatus {
                 connected,
