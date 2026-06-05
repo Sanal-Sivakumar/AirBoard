@@ -833,9 +833,7 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
     }
 
     ClipType type = ClipType.text;
-    if (text.startsWith("data:image/png;base64,")) {
-      type = ClipType.image;
-    } else if (text.startsWith("http://") || text.startsWith("https://")) {
+    if (text.startsWith("http://") || text.startsWith("https://")) {
       type = ClipType.link;
     } else if (text.contains(";") || text.contains("{") || text.contains("}") || text.contains("pkg") || text.contains("npm") || text.contains("cargo") || text.contains("flutter")) {
       type = ClipType.code;
