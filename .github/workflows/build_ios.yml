@@ -33,7 +33,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Flutter iOS (Simulator)
-        run: flutter build ios --release --simulator
+        run: flutter build ios --debug --simulator
 
       - name: Package IPA
         run: |
