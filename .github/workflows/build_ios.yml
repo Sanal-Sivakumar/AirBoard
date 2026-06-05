@@ -27,18 +27,18 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+          targets: aarch64-apple-ios
 
       - name: Install Flutter dependencies
         run: flutter pub get
 
-      - name: Build Flutter iOS (Simulator)
-        run: flutter build ios --debug --simulator
+      - name: Build Flutter iOS (Unsigned)
+        run: flutter build ios --release --no-codesign
 
       - name: Package IPA
         run: |
           mkdir -p Payload
-          mv build/ios/iphonesimulator/Runner.app Payload/
+          mv build/ios/iphoneos/Runner.app Payload/
           zip -r AirBoard-unsigned.ipa Payload
 
       - name: Upload IPA Artifact
