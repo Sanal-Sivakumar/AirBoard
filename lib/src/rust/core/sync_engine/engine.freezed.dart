@@ -79,6 +79,9 @@ class _$SyncEventCopyWithImpl<$Res, $Val extends SyncEvent>
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of SyncEvent
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -100,6 +103,8 @@ class __$$SyncEvent_ClipboardUpdatedImplCopyWithImpl<$Res>
       $Res Function(_$SyncEvent_ClipboardUpdatedImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SyncEvent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -148,7 +153,9 @@ class _$SyncEvent_ClipboardUpdatedImpl extends SyncEvent_ClipboardUpdated {
   @override
   int get hashCode => Object.hash(runtimeType, content, isLocal);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SyncEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SyncEvent_ClipboardUpdatedImplCopyWith<_$SyncEvent_ClipboardUpdatedImpl>
@@ -234,7 +241,10 @@ abstract class SyncEvent_ClipboardUpdated extends SyncEvent {
 
   String get content;
   bool get isLocal;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SyncEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SyncEvent_ClipboardUpdatedImplCopyWith<_$SyncEvent_ClipboardUpdatedImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
@@ -258,6 +268,8 @@ class __$$SyncEvent_ConnectionStatusImplCopyWithImpl<$Res>
       $Res Function(_$SyncEvent_ConnectionStatusImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SyncEvent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -307,7 +319,9 @@ class _$SyncEvent_ConnectionStatusImpl extends SyncEvent_ConnectionStatus {
   @override
   int get hashCode => Object.hash(runtimeType, connected, message);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SyncEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SyncEvent_ConnectionStatusImplCopyWith<_$SyncEvent_ConnectionStatusImpl>
@@ -393,7 +407,10 @@ abstract class SyncEvent_ConnectionStatus extends SyncEvent {
 
   bool get connected;
   String get message;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SyncEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SyncEvent_ConnectionStatusImplCopyWith<_$SyncEvent_ConnectionStatusImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
@@ -415,6 +432,8 @@ class __$$SyncEvent_ErrorImplCopyWithImpl<$Res>
       _$SyncEvent_ErrorImpl _value, $Res Function(_$SyncEvent_ErrorImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SyncEvent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -453,7 +472,9 @@ class _$SyncEvent_ErrorImpl extends SyncEvent_Error {
   @override
   int get hashCode => Object.hash(runtimeType, message);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SyncEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SyncEvent_ErrorImplCopyWith<_$SyncEvent_ErrorImpl> get copyWith =>
@@ -537,7 +558,10 @@ abstract class SyncEvent_Error extends SyncEvent {
   const SyncEvent_Error._() : super._();
 
   String get message;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SyncEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SyncEvent_ErrorImplCopyWith<_$SyncEvent_ErrorImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
