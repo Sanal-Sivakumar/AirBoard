@@ -6,6 +6,16 @@ Unlike cloud-dependent alternatives that upload your sensitive data to third-par
 
 ---
 
+## 📥 Direct Download Links
+
+You can download the pre-compiled beta binaries directly from the links below:
+*   🤖 **Android (APK)**: [airboard-android.apk](https://Sanal-Sivakumar.github.io/AirBoard/releases/airboard-android.apk)
+*   🐧 **Linux (ZIP)**: [airboard-linux.zip](https://Sanal-Sivakumar.github.io/AirBoard/releases/airboard-linux.zip)
+*   ❖ **Windows (ZIP)**: [airboard-windows.zip](https://Sanal-Sivakumar.github.io/AirBoard/releases/airboard-windows.zip)
+*   📱 **iOS & iPadOS (IPA)**: [AirBoard-ipadosios.ipa](https://Sanal-Sivakumar.github.io/AirBoard/releases/AirBoard-ipadosios.ipa)
+
+---
+
 ## 📖 Deep-Dive Reference Manuals
 To learn more about the engineering details of this project, check out these dedicated files:
 *   **[Technical Reference Guide](TECHNICAL_DETAILS.md)** ([Local File Link](file:///home/sanal-sivakumar/Documents/clipboard/TECHNICAL_DETAILS.md)): A textbook-style guide to AirBoard's P2P networking topology, UDP broadcasts, X25519/Ed25519 cryptography, and Dart-to-Rust memory bindings.
