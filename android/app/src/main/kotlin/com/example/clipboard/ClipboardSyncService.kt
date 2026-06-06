@@ -25,16 +25,23 @@ class ClipboardSyncService : Service() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var wifiLock: WifiManager.WifiLock? = null
     private var multicastLock: WifiManager.MulticastLock? = null
+    
+    private var currentContentText = "Clipboard Sync Active"
+    private var currentSyncText: String? = null
 
     companion object {
         private const val CHANNEL_ID = "clipboard_sync_channel_v2"
         private const val NOTIFICATION_ID = 101
         
         const val ACTION_UPDATE_NOTIFICATION = "com.example.clipboard.UPDATE_NOTIFICATION"
+        const val ACTION_TOGGLE_PAUSE = "com.example.clipboard.TOGGLE_PAUSE"
         const val EXTRA_TEXT = "clipboard_text"
 
         @Volatile
         var ignoreNextClipChange = false
+
+        @Volatile
+        var isPaused = false
     }
 
     override fun onCreate() {
@@ -44,6 +51,10 @@ class ClipboardSyncService : Service() {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.addPrimaryClipChangedListener {
             Log.i("ClipboardSyncService", "onPrimaryClipChanged callback triggered")
+            if (isPaused) {
+                Log.i("ClipboardSyncService", "onPrimaryClipChanged: sync is paused, ignoring change")
+                return@addPrimaryClipChangedListener
+            }
             if (ignoreNextClipChange) {
                 Log.i("ClipboardSyncService", "onPrimaryClipChanged: ignoring change caused by local write")
                 ignoreNextClipChange = false
@@ -163,7 +174,11 @@ class ClipboardSyncService : Service() {
                             val text = reader.readText()
                             Log.i("ClipboardSyncService", "startLocalServer: read ${text.length} chars from socket: \"${if (text.length > 30) text.substring(0, 30) + "..." else text}\"")
                             if (text.isNotEmpty()) {
-                                updateNotification(text)
+                                if (isPaused) {
+                                    Log.i("ClipboardSyncService", "startLocalServer: sync is paused, ignoring incoming text: \"$text\"")
+                                } else {
+                                    updateNotification(text)
+                                }
                             }
                         } catch (e: Exception) {
                             Log.e("ClipboardSyncService", "startLocalServer: connection error", e)
@@ -192,7 +207,16 @@ class ClipboardSyncService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.i("ClipboardSyncService", "onStartCommand: action = ${intent?.action}")
-        if (intent != null && intent.action == ACTION_UPDATE_NOTIFICATION) {
+        if (intent != null && intent.action == ACTION_TOGGLE_PAUSE) {
+            isPaused = !isPaused
+            Log.i("ClipboardSyncService", "onStartCommand: toggled isPaused to $isPaused")
+            
+            val contentText = if (isPaused) "Sync Paused" else currentContentText
+            val notification = createNotification(contentText, if (isPaused) null else currentSyncText)
+            
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.notify(NOTIFICATION_ID, notification)
+        } else if (intent != null && intent.action == ACTION_UPDATE_NOTIFICATION) {
             val text = intent.getStringExtra(EXTRA_TEXT)
             Log.i("ClipboardSyncService", "onStartCommand: update request, text = ${if (text != null) "\"$text\"" else "null"}")
             if (text != null) {
@@ -200,7 +224,7 @@ class ClipboardSyncService : Service() {
             }
         } else {
             Log.i("ClipboardSyncService", "onStartCommand: normal service startup, launching foreground notification")
-            val notification = createNotification("Clipboard Sync Active")
+            val notification = createNotification(currentContentText)
             
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
@@ -230,39 +254,72 @@ class ClipboardSyncService : Service() {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
 
-        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val pendingIntentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         } else {
             PendingIntent.FLAG_UPDATE_CURRENT
         }
 
-        // Add persistent "Sync to PC" action button
-        val sendIntent = Intent(this, ClipboardWriteActivity::class.java).apply {
-            putExtra("action", "read_and_send")
-            action = "com.example.clipboard.SEND_ACTION_" + System.currentTimeMillis()
+        // Tap action: open MainActivity
+        val openIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
-        val pendingSendIntent = PendingIntent.getActivity(this, 1, sendIntent, flags)
-        
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
-            val sendAction = Notification.Action.Builder(
-                android.R.drawable.ic_menu_share,
-                "Sync",
-                pendingSendIntent
-            ).build()
-            builder.addAction(sendAction)
+        val pendingOpenIntent = PendingIntent.getActivity(this, 0, openIntent, pendingIntentFlags)
+        builder.setContentIntent(pendingOpenIntent)
+
+        // Add persistent "Sync" (send to PC) action button if not paused
+        if (!isPaused) {
+            val sendIntent = Intent(this, ClipboardWriteActivity::class.java).apply {
+                putExtra("action", "read_and_send")
+                action = "com.example.clipboard.SEND_ACTION_" + System.currentTimeMillis()
+            }
+            val pendingSendIntent = PendingIntent.getActivity(this, 1, sendIntent, pendingIntentFlags)
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+                val sendAction = Notification.Action.Builder(
+                    android.R.drawable.ic_menu_share,
+                    "Sync",
+                    pendingSendIntent
+                ).build()
+                builder.addAction(sendAction)
+            }
         }
 
-        if (syncText != null) {
+        // Add Pause / Resume action button
+        val pauseIntent = Intent(this, ClipboardSyncService::class.java).apply {
+            action = ACTION_TOGGLE_PAUSE
+        }
+        val pendingPauseIntent = PendingIntent.getService(this, 2, pauseIntent, pendingIntentFlags)
+        val pauseActionLabel = if (isPaused) "Resume" else "Pause"
+        val pauseIcon = if (isPaused) android.R.drawable.ic_media_play else android.R.drawable.ic_media_pause
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+            val pauseAction = Notification.Action.Builder(
+                pauseIcon,
+                pauseActionLabel,
+                pendingPauseIntent
+            ).build()
+            builder.addAction(pauseAction)
+        }
+
+        // Add "Copy" action button only if syncText is not null AND overlay permission is not granted AND we are not paused
+        val hasOverlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Settings.canDrawOverlays(this)
+        } else {
+            true
+        }
+
+        if (syncText != null && !hasOverlay && !isPaused) {
             val copyIntent = Intent(this, ClipboardWriteActivity::class.java).apply {
                 putExtra("text", syncText)
                 action = "com.example.clipboard.COPY_ACTION_" + System.currentTimeMillis()
             }
-            val pendingIntent = PendingIntent.getActivity(this, 0, copyIntent, flags)
+            val pendingIntent = PendingIntent.getActivity(this, 0, copyIntent, pendingIntentFlags)
             
             val action = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
                 Notification.Action.Builder(
                     android.R.drawable.ic_menu_edit,
-                    "Sync",
+                    "Copy",
                     pendingIntent
                 ).build()
             } else {
@@ -280,6 +337,8 @@ class ClipboardSyncService : Service() {
     private fun updateNotification(syncText: String) {
         Log.i("ClipboardSyncService", "updateNotification: syncText length = ${syncText.length}")
         val previewText = if (syncText.length > 30) syncText.substring(0, 30) + "..." else syncText
+        currentSyncText = syncText
+        currentContentText = "Synced: \"$previewText\""
         
         val hasOverlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Settings.canDrawOverlays(this)
@@ -303,7 +362,7 @@ class ClipboardSyncService : Service() {
             Log.i("ClipboardSyncService", "updateNotification: overlay permission not granted, will require manual notification copy action")
         }
 
-        val notification = createNotification("Synced: \"$previewText\"", syncText)
+        val notification = createNotification(currentContentText, syncText)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         } else {

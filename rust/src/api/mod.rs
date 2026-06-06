@@ -85,6 +85,11 @@ pub fn start_sync(storage_dir: String, device_name: String, platform: String, de
         if platform == "linux" || platform == "windows" {
             tokio::spawn(start_desktop_clipboard_monitor());
         }
+
+        #[cfg(target_os = "android")]
+        if platform == "android" {
+            tokio::spawn(crate::core::clipboard::android::start_android_local_receiver());
+        }
     });
 }
 

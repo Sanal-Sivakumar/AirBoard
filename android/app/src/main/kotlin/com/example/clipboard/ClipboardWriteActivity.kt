@@ -7,6 +7,7 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import kotlin.concurrent.thread
 
 class ClipboardWriteActivity : Activity() {
     private var hasCopied = false
@@ -41,8 +42,22 @@ class ClipboardWriteActivity : Activity() {
                                     Log.i("ClipboardWriteActivity", "onWindowFocusChanged: text matches lastSentText, skipping sync")
                                 } else {
                                     lastSentText = text
-                                    Log.i("ClipboardWriteActivity", "onWindowFocusChanged: read text from clipboard, invoking method channel")
-                                    MainActivity.methodChannel?.invokeMethod("sendClipboardToPC", text)
+                                    Log.i("ClipboardWriteActivity", "onWindowFocusChanged: read text from clipboard, sending to Rust socket")
+                                    thread {
+                                        try {
+                                            val socket = java.net.Socket("127.0.0.1", 45457)
+                                            val writer = socket.getOutputStream().bufferedWriter(Charsets.UTF_8)
+                                            writer.write(text)
+                                            writer.flush()
+                                            socket.close()
+                                            Log.i("ClipboardWriteActivity", "Successfully sent local clip to Rust socket")
+                                        } catch (e: Exception) {
+                                            Log.e("ClipboardWriteActivity", "Failed to send local clip to Rust socket", e)
+                                        }
+                                    }
+                                    try {
+                                        MainActivity.methodChannel?.invokeMethod("sendClipboardToPC", text)
+                                    } catch (ignored: Exception) {}
                                     Toast.makeText(this, "Synced clipboard!", Toast.LENGTH_SHORT).show()
                                 }
                             } else {
