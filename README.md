@@ -11,6 +11,7 @@ Unlike cloud-dependent alternatives that upload your sensitive data to third-par
 You can download the pre-compiled beta binaries directly from the links below:
 *   🤖 **Android (APK)**: [airboard-android.apk](https://Sanal-Sivakumar.github.io/AirBoard/releases/airboard-android.apk)
 *   🐧 **Linux (ZIP)**: [airboard-linux.zip](https://Sanal-Sivakumar.github.io/AirBoard/releases/airboard-linux.zip)
+*   🍎 **macOS (ZIP)**: [airboard-macos.zip](https://Sanal-Sivakumar.github.io/AirBoard/releases/airboard-macos.zip)
 *   ❖ **Windows (ZIP)**: [airboard-windows.zip](https://Sanal-Sivakumar.github.io/AirBoard/releases/airboard-windows.zip)
 *   📱 **iOS & iPadOS (IPA)**: [AirBoard-ipadosios.ipa](https://Sanal-Sivakumar.github.io/AirBoard/releases/AirBoard-ipadosios.ipa)
 
@@ -98,6 +99,13 @@ Building for Windows requires a **Windows** host machine with **Visual Studio (C
 flutter build windows --release
 ```
 *The compiled binary files will be generated inside `build/windows/x64/runner/Release/`.*
+
+### 5. macOS Desktop
+Building for macOS requires a **macOS** host machine with **Xcode** and the **Rust** toolchain installed:
+```bash
+flutter build macos --release
+```
+*The compiled app bundle (`AirBoard.app` or `clipboard.app`) will be generated inside `build/macos/Build/Products/Release/`.*
 
 ---
 
