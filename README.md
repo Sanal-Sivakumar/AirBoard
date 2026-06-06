@@ -19,8 +19,8 @@ You can download the pre-compiled beta binaries directly from the links below:
 
 ## 📖 Deep-Dive Reference Manuals
 To learn more about the engineering details of this project, check out these dedicated files:
-*   **[Technical Reference Guide](TECHNICAL_DETAILS.md)** ([Local File Link](file:///home/sanal-sivakumar/Documents/clipboard/TECHNICAL_DETAILS.md)): A textbook-style guide to AirBoard's P2P networking topology, UDP broadcasts, X25519/Ed25519 cryptography, and Dart-to-Rust memory bindings.
-*   **[Troubleshooting & Resolution Log](TROUBLESHOOTING.md)** ([Local File Link](file:///home/sanal-sivakumar/Documents/clipboard/TROUBLESHOOTING.md)): A chronological story detailing OS constraints (Android background limits, iOS doze execution), network isolation, and thread-panics solved during development.
+*   **[Technical Reference Guide](TECHNICAL_DETAILS.md)**: A textbook-style guide to AirBoard's P2P networking topology, UDP broadcasts, X25519/Ed25519 cryptography, and Dart-to-Rust memory bindings.
+*   **[Troubleshooting & Resolution Log](TROUBLESHOOTING.md)**: A chronological story detailing OS constraints (Android background limits, iOS doze execution), network isolation, and thread-panics solved during development.
 
 ---
 
@@ -29,7 +29,7 @@ To learn more about the engineering details of this project, check out these ded
 The product showcase website is live and hosted on GitHub Pages:
 *   **Live Web Address**: [https://sanal-sivakumar.github.io/AirBoard/](https://sanal-sivakumar.github.io/AirBoard/)
 
-*(Alternatively, you can run it locally from the [web_showcase/](file:///home/sanal-sivakumar/Documents/clipboard/web_showcase) directory using `python3 -m http.server 8080 --directory web_showcase` at http://localhost:8080)*
+*(Alternatively, you can run it locally from the [web_showcase/](web_showcase) directory using `python3 -m http.server 8080 --directory web_showcase` at http://localhost:8080)*
 
 ---
 
@@ -91,7 +91,7 @@ Due to Apple compiler constraints, building for iPadOS requires a **macOS** comp
 flutter build ipa --release --no-codesign
 ```
 *The output `.ipa` package will be located under `build/ios/ipa/`.*
-*   To install on an iPad, refer to the **iPad Sideloading Guide** on our website or inside the [sideload instructions section](file:///home/sanal-sivakumar/Documents/clipboard/web_showcase/index.html#sideload-guide).
+*   To install on an iPad, refer to the **iPad Sideloading Guide** on our website or inside the [sideload instructions section](web_showcase/index.html#sideload-guide).
 
 ### 4. Windows Desktop
 Building for Windows requires a **Windows** host machine with **Visual Studio (C++ Desktop development)** and the **Rust (MSVC)** toolchain installed:
