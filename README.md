@@ -1,84 +1,100 @@
-# SyncBoard - Secure End-to-End Encrypted Clipboard Sync (Flutter + Rust)
+# AirBoard - Decentralized Cross-Platform P2P Clipboard Sync
 
-SyncBoard is a highly secure, local-network Peer-to-Peer (P2P) clipboard synchronization system. It features automatic local network device discovery, secure manual device pairing, and end-to-end (E2E) payload encryption.
+AirBoard is a free, open-source, zero-trust, serverless peer-to-peer (P2P) clipboard synchronization system. It securely shares clipboard data across Android, Linux, iPadOS, and Windows devices on your local network (LAN) in less than 50 milliseconds.
 
----
-
-## 1. Security Architecture
-
-SyncBoard utilizes a trusted-device model to ensure clipboard contents are never leaked or intercepted:
-
-1. **Cryptographic Identity**:
-   - Each device generates a permanent UUID and two keypairs on its first startup:
-     - **Ed25519** keypair for connection handshakes and payload signatures.
-     - **X25519** keypair for ephemeral Diffie-Hellman session key exchanges.
-   - Keys are stored securely on the host platform using the Android Keystore (Android) and Linux Keyring/Keychain (Linux) via `flutter_secure_storage`.
-
-2. **Manual Device Pairing Flow**:
-   - Discovered devices are initially flagged as **Unpaired**.
-   - Initiating pairing opens a temporary connection to exchange public keys and display a visual SHA-256 fingerprint (`SHA256(public_signing_key)`) on both screens.
-   - Once approved by the recipient, public keys are persisted permanently in `trust_store.json`.
-
-3. **Authenticated Session Handshake (Station-to-Station)**:
-   - When connecting, trusted peers exchange signed ephemeral X25519 public keys (`Handshake1` and `Handshake2`).
-   - Signature checks verify that both devices own the private keys corresponding to their paired public keys.
-   - A shared session key is derived via Diffie-Hellman, hashed using SHA-256, and used to encrypt all data traffic.
-
-4. **Payload Encryption**:
-   - All clipboard contents and heartbeats are encrypted using **ChaCha20-Poly1305** authenticated symmetric encryption.
-   - Sockets transmit only encrypted envelopes:
-     ```json
-     {
-       "type": "encrypted_payload",
-       "sender": "sender-device-id",
-       "nonce": "base64-nonce",
-       "ciphertext": "base64-ciphertext"
-     }
-     ```
-   - When a peer forwards a clipboard update to other mesh nodes, it decrypts it, validates it, and re-encrypts it using the specific session key of each destination peer. Plaintext is never forwarded or exposed.
+Unlike cloud-dependent alternatives that upload your sensitive data to third-party databases, AirBoard operates entirely locally. Your copy-paste streams are encrypted end-to-end and transmitted directly between your paired devices.
 
 ---
 
-## 2. Installation & Prerequisites
+## 📖 Deep-Dive Reference Manuals
+To learn more about the engineering details of this project, check out these dedicated files:
+*   **[Technical Reference Guide (TECHNICAL_DETAILS.md)](file:///home/sanal-sivakumar/Documents/clipboard/TECHNICAL_DETAILS.md)**: A textbook-style guide to AirBoard's P2P networking topology, UDP broadcasts, X25519/Ed25519 cryptography, and Dart-to-Rust memory bindings.
+*   **[Troubleshooting & Resolution Log (TROUBLESHOOTING.md)](file:///home/sanal-sivakumar/Documents/clipboard/TROUBLESHOOTING.md)**: An archive of OS constraints (Android background limits, iOS doze execution) and network isolation challenges solved during development.
 
-### Linux Dependencies
-Install standard compilation headers for Linux:
+---
+
+## 🌐 Interactive 3D Product Showcase Website
+We have built an Apple-inspired, 3D interactive showcase landing page for AirBoard featuring:
+*   An interactive liquid glass Torus Knot (infinity sync loop) rendering in real-time WebGL via Three.js.
+*   An Apple Bento Grid layout displaying platform features, requirements, and release downloads.
+*   An integrated iPadOS Sideloading Guide detailing installation steps for Sideloadly, AltStore, and TrollStore.
+
+The showcase code is located inside the [web_showcase/](file:///home/sanal-sivakumar/Documents/clipboard/web_showcase) directory.
+*   **Local Host Address**: [http://localhost:8080](http://localhost:8080)
+*   **Launch Command**: `python3 -m http.server 8080 --directory web_showcase`
+
+---
+
+## 🛠️ Technology Stack
+*   **Cross-Platform UI**: Flutter (Dart SDK >= 3.3.0) with an adaptive, glassmorphic layout.
+*   **System Core Engine**: Rust (Edition 2021) for multi-threaded socket operations, file systems, and timers.
+*   **Interoperability**: `flutter_rust_bridge` (v2.12.0) for zero-copy memory translation between Dart and Rust.
+*   **End-to-End Encryption (E2EE)**: `ed25519-dalek` (device signing keys), `x25519-dalek` (Diffie-Hellman ephemeral handshakes), and `chacha20poly1305` (symmetric payload encryption).
+*   **Key Storage**: System Keystore/Keyring integrations via `flutter_secure_storage`.
+*   **Discovery Protocol**: UDP sockets on port `45455`.
+*   **Synchronization Link**: TCP sockets on port `45457`.
+
+---
+
+## 🚀 Building & Running Client Builds
+
+### Prerequisites
+For Linux host environments, install the standard compilation headers:
 ```bash
 sudo apt-get update
 sudo apt-get install -y build-essential pkg-config libx11-dev libxcb1-dev
 ```
 
-### Rust Cryptography Crates
-SyncBoard uses high-performance, compilation-friendly, pure-Rust cryptographic backends:
-- `chacha20poly1305`
-- `ed25519-dalek`
-- `x25519-dalek`
-- `rand`
-- `base64`
-
-Configure targets for compilation:
+Configure Rust Android targets for compilation:
 ```bash
 rustup target add aarch64-linux-android
 rustup target add x86_64-linux-android
 ```
 
+Perform the bridge code generation:
+```bash
+flutter_rust_bridge_codegen generate
+```
+
+### 1. Linux Desktop
+Run the client directly:
+```bash
+flutter run -d linux
+```
+To build the release zip:
+```bash
+flutter build linux --release
+```
+
+### 2. Android (Phones & Tablets)
+Run the application on an active device/emulator:
+```bash
+flutter run -d android
+```
+To compile the standalone release APK:
+```bash
+flutter build apk --release
+```
+*The output binary will be generated at `build/app/outputs/flutter-apk/app-release.apk`.*
+
+### 3. iPadOS & iOS
+Due to Apple compiler constraints, building for iPadOS requires a **macOS** computer with **Xcode** installed:
+```bash
+flutter build ipa --release --no-codesign
+```
+*The output `.ipa` package will be located under `build/ios/ipa/`.*
+*   To install on an iPad, refer to the **iPad Sideloading Guide** on our website or inside the [sideload instructions section](file:///home/sanal-sivakumar/Documents/clipboard/web_showcase/index.html#sideload-guide).
+
+### 4. Windows Desktop
+Building for Windows requires a **Windows** host machine with **Visual Studio (C++ Desktop development)** and the **Rust (MSVC)** toolchain installed:
+```cmd
+flutter build windows --release
+```
+*The compiled binary files will be generated inside `build/windows/x64/runner/Release/`.*
+
 ---
 
-## 3. Running & Testing
-
-1. **Perform Code Generation**:
-   ```bash
-   flutter_rust_bridge_codegen generate
-   ```
-
-2. **Run the Apps**:
-   - On Linux: `flutter run -d linux`
-   - On Android: `flutter run -d android`
-
-3. **Security Testing Steps**:
-   - **Step 1 (Discovery)**: Enable sync on both devices. Verify they show up in each other's "Devices" list as unpaired.
-   - **Step 2 (Clipboard Isolation)**: Copy text on Device A. Verify that Device B does **NOT** receive the text (since they are unpaired).
-   - **Step 3 (Pairing)**: Tap "Pair Device" on Device A. Verify a modal dialog pops up on B displaying A's device name and fingerprint.
-   - **Step 4 (Fingerprint Check)**: Match B's prompt fingerprint against A's header fingerprint. Tap **Approve** on B.
-   - **Step 5 (Encrypted Sync)**: Verify both devices list each other in "Trusted Peers" and establish a "Secure session". Copy text on A and verify B's clipboard updates instantly.
-   - **Step 6 (Unpairing)**: Go to "Trusted Peers" tab on B and tap the delete button. Confirm unpairing. Copy text on A and verify B does not receive it anymore.
+## 🤝 Support & Contributions
+AirBoard is open-source and welcoming to community contributions:
+*   **Official Repository**: [https://github.com/Sanal-Sivakumar/AirBoard](https://github.com/Sanal-Sivakumar/AirBoard)
+*   **Developer Contact**: [sanalsiva2005@gmail.com](mailto:sanalsiva2005@gmail.com)

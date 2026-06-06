@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirBoard | Infinite Clipboard Sync</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Styling -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <!-- 3D Canvas Background -->
+    <canvas id="three-canvas"></canvas>
+
+    <!-- Glowing Background blobs for cinematic lighting -->
+    <div class="radial-glow glow-1"></div>
+    <div class="radial-glow glow-2"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="4" width="14" height="16" rx="3.5" stroke="url(#logo-grad)" stroke-width="2.5" />
+                    <line x1="8" y1="9" x2="16" y2="9" stroke="url(#logo-grad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="8" y1="13" x2="14" y2="13" stroke="url(#logo-grad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#00f2fe"/>
+                            <stop offset="1" stop-color="#7f00ff"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>AirBoard</span>
+            </a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#requirements">Requirements</a>
+                <a href="#downloads" class="btn btn-primary nav-cta">Download</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content fade-in">
+            <span class="hero-badge">Designed for Speed</span>
+            <h1 class="hero-title">Copy here.<br><span class="text-gradient">Paste anywhere.</span></h1>
+            <p class="hero-subtitle">
+                AirBoard is a free and open-source utility that synchronizes your clipboard across Android, Linux, and Windows devices in less than 50 milliseconds. Secure, offline-first, and completely automatic.
+            </p>
+            <div class="hero-actions">
+                <a href="#downloads" class="btn btn-primary btn-large">Download Beta</a>
+                <a href="#features" class="btn btn-secondary btn-large">See How It Works</a>
+            </div>
+        </div>
+        
+        <div class="scroll-indicator">
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
+            <span>Scroll to orbit 3D stream</span>
+        </div>
+    </section>
+
+    <!-- Immersive Interactive Intro Section -->
+    <section id="demo" class="demo-section">
+        <div class="container">
+            <div class="text-reveal-container fade-in">
+                <h2 class="reveal-text">
+                    No cloud servers. No lag. <br>
+                    Just <span class="highlight">pure peer-to-peer connection</span> running directly on your local network.
+                </h2>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bento Box Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-header fade-in text-center">
+                <span class="section-subtitle">Features</span>
+                <h2 class="section-title">Designed to feel native.</h2>
+            </div>
+            
+            <!-- Apple Bento Grid -->
+            <div class="bento-grid">
+                
+                <!-- Bento 1: Android Loopback (Wide Card) -->
+                <div class="bento-card bento-wide fade-in">
+                    <div class="bento-content">
+                        <div class="bento-icon bg-blue">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                        </div>
+                        <h3>Seamless Android Loopback</h3>
+                        <p>AirBoard runs a localized TCP loopback service directly on Android linked to the native background service. It bypasses OS clipboard reading bans automatically, keeping your connection alive and synchronizing your clips even when the app is completely swiped away.</p>
+                    </div>
+                    <div class="bento-visual visual-loopback">
+                        <!-- Custom animated visual elements via CSS -->
+                        <div class="visual-node node-phone">Android</div>
+                        <div class="visual-line"></div>
+                        <div class="visual-node node-pc">PC</div>
+                    </div>
+                </div>
+
+                <!-- Bento 2: Privacy Control (Standard Card) -->
+                <div class="bento-card fade-in">
+                    <div class="bento-content">
+                        <div class="bento-icon bg-purple">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        </div>
+                        <h3>Pause & Resume Privacy</h3>
+                        <p>Your privacy comes first. Easily pause clipboard monitoring with a single tap in the notification bar to copy passwords or sensitive data without broadcasting them.</p>
+                    </div>
+                    <div class="bento-visual visual-privacy">
+                        <div class="toggle-switch active">
+                            <div class="toggle-handle"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bento 3: Cryptography (Standard Card) -->
+                <div class="bento-card fade-in">
+                    <div class="bento-content">
+                        <div class="bento-icon bg-cyan">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                        </div>
+                        <h3>Secure Pair Keys</h3>
+                        <p>Communication is protected by cryptographic handshakes. Only devices paired with matching identity fingerprints can read your data.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Platform Requirements Section -->
+    <section id="requirements" class="requirements-section">
+        <div class="container">
+            <div class="section-header fade-in text-center">
+                <span class="section-subtitle">Requirements</span>
+                <h2 class="section-title">Clean compatibility.</h2>
+            </div>
+            
+            <div class="requirements-table-container fade-in">
+                <table class="requirements-table">
+                    <thead>
+                        <tr>
+                            <th>Platform</th>
+                            <th>Supported Versions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="platform-name">
+                                    <span class="icon-android">🤖</span>
+                                    <span>Android</span>
+                                </div>
+                            </td>
+                            <td>Android 10+ (API 29+)</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="platform-name">
+                                    <span class="icon-ipad">📱</span>
+                                    <span>iPadOS</span>
+                                </div>
+                            </td>
+                            <td>iPadOS 14.0+</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="platform-name">
+                                    <span class="icon-linux">🐧</span>
+                                    <span>Linux</span>
+                                </div>
+                            </td>
+                            <td>Ubuntu, Debian, Fedora (X11 & Wayland)</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="platform-name">
+                                    <span class="icon-windows">❖</span>
+                                    <span>Windows</span>
+                                </div>
+                            </td>
+                            <td>Windows 10, 11 (x64)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Downloads Section -->
+    <section id="downloads" class="downloads-section">
+        <div class="container">
+            <div class="section-header fade-in text-center">
+                <span class="section-subtitle">Releases</span>
+                <h2 class="section-title">Get AirBoard today.</h2>
+            </div>
+
+            <div class="downloads-grid">
+                <!-- Android Download Card -->
+                <div class="download-card fade-in">
+                    <div class="download-platform">Android</div>
+                    <div class="download-meta">Release Build (APK) • Version 1.0.0</div>
+                    <a href="../build/app/outputs/flutter-apk/app-release.apk" class="btn btn-primary download-btn" download>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        <span>Download APK</span>
+                    </a>
+                </div>
+
+                <!-- Linux Download Card -->
+                <div class="download-card fade-in">
+                    <div class="download-platform">Linux</div>
+                    <div class="download-meta">Release Bundle (ZIP) • Version 1.0.0</div>
+                    <a href="../airboard-linux.zip" class="btn btn-secondary download-btn" download>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        <span>Download ZIP</span>
+                    </a>
+                </div>
+
+                <!-- iPadOS Download Card -->
+                <div class="download-card fade-in">
+                    <div class="download-platform">iPadOS</div>
+                    <div class="download-meta">Beta App (IPA) • Sideload Required</div>
+                    <a href="../airboard-ipad.ipa" class="btn btn-secondary download-btn" download>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        <span>Download IPA</span>
+                    </a>
+                </div>
+
+                <!-- Windows Download Card -->
+                <div class="download-card disabled fade-in">
+                    <div class="download-platform">Windows</div>
+                    <div class="download-meta">Coming Soon (Build from source)</div>
+                    <button class="btn btn-disabled download-btn" disabled>
+                        <span>Build Instructions</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="downloads-notice fade-in text-center">
+                <p>🍎 <strong>iPhone & macOS:</strong> Development underway. Coming soon.</p>
+                <p class="sideload-hint">Need help installing on iPad? <a href="#sideload-guide">Read our iPad Sideloading Guide below</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- iPad Sideloading Guide -->
+    <section id="sideload-guide" class="sideload-section container">
+        <div class="sideload-card-container fade-in">
+            <span class="section-subtitle">Installation Guide</span>
+            <h2 class="section-title">Sideloading on iPad</h2>
+            <p class="section-desc">Since AirBoard is currently in beta and not on the App Store, you need to sideload the <code>.ipa</code> file onto your iPad using one of these standard tools.</p>
+            
+            <div class="sideload-methods">
+                <!-- Method 1: Sideloadly -->
+                <div class="sideload-method-box">
+                    <h3>Method 1: Sideloadly (Easiest)</h3>
+                    <p>Sideloadly is a free desktop program (Windows/macOS) that installs apps using your Apple ID. It is highly reliable.</p>
+                    <ol>
+                        <li>Download and install <strong>Sideloadly</strong> on your computer.</li>
+                        <li>Download the <strong>AirBoard IPA</strong> file above onto your computer.</li>
+                        <li>Connect your iPad to your computer using a USB cable.</li>
+                        <li>Open Sideloadly, select your iPad, and enter your Apple ID.</li>
+                        <li>Drag and drop the downloaded <code>.ipa</code> file into Sideloadly.</li>
+                        <li>Click <strong>Start</strong> and enter your Apple ID password if prompted (sent securely to Apple).</li>
+                        <li>On your iPad, open <strong>Settings > General > VPN & Device Management</strong>, select your Apple ID, and tap <strong>Trust</strong>.</li>
+                    </ol>
+                </div>
+
+                <!-- Method 2: AltStore / TrollStore -->
+                <div class="sideload-method-box">
+                    <h3>Method 2: AltStore & TrollStore</h3>
+                    <p>If you already use a mobile installer directly on your iPad:</p>
+                    <ul>
+                        <li><strong>AltStore:</strong> Download the <code>.ipa</code> directly on your iPad, open AltStore, tap the <strong>"+"</strong> button on the My Apps tab, and select the AirBoard file.</li>
+                        <li><strong>TrollStore:</strong> Works permanently if your iPad runs a compatible iOS version (iOS 14.0 - 16.6.1). Open the <code>.ipa</code> using TrollStore to install it permanently without the 7-day developer expiration.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Developer Section -->
+    <section class="developer-section">
+        <div class="container">
+            <div class="developer-card fade-in">
+                <span class="section-subtitle">Free & Open Source</span>
+                <h2 class="section-title text-gradient">Connect & Contribute</h2>
+                <p class="section-desc">AirBoard is completely free, secure, and open-source. Check out the source code, contribute to development, or reach out to the developer directly.</p>
+                <div class="contact-links">
+                    <a href="https://github.com/Sanal-Sivakumar/AirBoard" target="_blank" class="btn btn-secondary contact-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                        <span>GitHub Repository</span>
+                    </a>
+                    <a href="mailto:sanalsiva2005@gmail.com" class="btn btn-primary contact-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        <span>sanalsiva2005@gmail.com</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 AirBoard. Created with speed, security, and open source values.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript logic -->
+    <script src="app.js"></script>
+</body>
+</html>
