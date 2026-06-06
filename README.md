@@ -8,18 +8,15 @@ Unlike cloud-dependent alternatives that upload your sensitive data to third-par
 
 ## 📖 Deep-Dive Reference Manuals
 To learn more about the engineering details of this project, check out these dedicated files:
-*   **[Technical Reference Guide (TECHNICAL_DETAILS.md)](file:///home/sanal-sivakumar/Documents/clipboard/TECHNICAL_DETAILS.md)**: A textbook-style guide to AirBoard's P2P networking topology, UDP broadcasts, X25519/Ed25519 cryptography, and Dart-to-Rust memory bindings.
-*   **[Troubleshooting & Resolution Log (TROUBLESHOOTING.md)](file:///home/sanal-sivakumar/Documents/clipboard/TROUBLESHOOTING.md)**: An archive of OS constraints (Android background limits, iOS doze execution) and network isolation challenges solved during development.
+*   **[Technical Reference Guide](TECHNICAL_DETAILS.md)** ([Local File Link](file:///home/sanal-sivakumar/Documents/clipboard/TECHNICAL_DETAILS.md)): A textbook-style guide to AirBoard's P2P networking topology, UDP broadcasts, X25519/Ed25519 cryptography, and Dart-to-Rust memory bindings.
+*   **[Troubleshooting & Resolution Log](TROUBLESHOOTING.md)** ([Local File Link](file:///home/sanal-sivakumar/Documents/clipboard/TROUBLESHOOTING.md)): A chronological story detailing OS constraints (Android background limits, iOS doze execution), network isolation, and thread-panics solved during development.
 
 ---
 
-## 🌐 Interactive 3D Product Showcase Website
-We have built an Apple-inspired, 3D interactive showcase landing page for AirBoard featuring:
-*   An interactive liquid glass Torus Knot (infinity sync loop) rendering in real-time WebGL via Three.js.
-*   An Apple Bento Grid layout displaying platform features, requirements, and release downloads.
-*   An integrated iPadOS Sideloading Guide detailing installation steps for Sideloadly, AltStore, and TrollStore.
+## 🌐 Product Showcase Website
 
-The showcase code is located inside the [web_showcase/](file:///home/sanal-sivakumar/Documents/clipboard/web_showcase) directory.
+The product showcase website is located in the [web_showcase/](file:///home/sanal-sivakumar/Documents/clipboard/web_showcase) directory.
+
 *   **Local Host Address**: [http://localhost:8080](http://localhost:8080)
 *   **Launch Command**: `python3 -m http.server 8080 --directory web_showcase`
 
