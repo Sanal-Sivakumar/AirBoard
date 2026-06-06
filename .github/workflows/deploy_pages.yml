@@ -29,11 +29,19 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Create Static Distribution
+        run: |
+          mkdir -p dist
+          cp index.html dist/
+          cp -r web_showcase dist/
+          cp -r releases dist/
+          if [ -d "assets" ]; then cp -r assets dist/; fi
+          touch dist/.nojekyll
+
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload the root directory (contains index.html, web_showcase/, and releases/)
-          path: '.'
+          path: './dist'
 
       - name: Deploy to GitHub Pages
         id: deployment
