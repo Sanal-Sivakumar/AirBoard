@@ -272,42 +272,87 @@
             </div>
 
             <div class="downloads-notice fade-in text-center">
-                <p class="sideload-hint">Need help installing on iPhone or iPad? <a href="#sideload-guide">Read our Sideloading Guide below</a>.</p>
+                <p class="sideload-hint">Need help installing on iOS or macOS? <a href="#sideload-guide">Read our Installation & Sideloading Guide below</a>.</p>
             </div>
         </div>
     </section>
 
-    <!-- iOS Sideloading Guide -->
+    <!-- Installation & Sideloading Guide -->
     <section id="sideload-guide" class="sideload-section container">
         <div class="sideload-card-container fade-in">
             <span class="section-subtitle">Installation Guide</span>
-            <h2 class="section-title">Sideloading on iOS (iPhone & iPad)</h2>
-            <p class="section-desc">Since AirBoard is currently in beta and not on the App Store, you need to sideload the <code>.ipa</code> file onto your iPhone or iPad using one of these standard tools.</p>
+            <h2 class="section-title">Sideloading & Security Bypass</h2>
+            <p class="section-desc">Since AirBoard is in pre-release beta and not distributed through Apple's App Store, you need to follow these steps to bypass macOS Gatekeeper or install the <code>.ipa</code> package on iOS & Apple Silicon Macs.</p>
             
-            <div class="sideload-methods">
-                <!-- Method 1: Sideloadly -->
-                <div class="sideload-method-box">
-                    <h3>Method 1: Sideloadly (Easiest)</h3>
-                    <p>Sideloadly is a free desktop program (Windows/macOS) that installs apps using your Apple ID. It is highly reliable.</p>
-                    <ol>
-                        <li>Download and install <strong>Sideloadly</strong> on your computer.</li>
-                        <li>Download the <strong>AirBoard IPA</strong> file above onto your computer.</li>
-                        <li>Connect your device (iPhone/iPad) to your computer using a USB cable.</li>
-                        <li>Open Sideloadly, select your device, and enter your Apple ID.</li>
-                        <li>Drag and drop the downloaded <code>.ipa</code> file into Sideloadly.</li>
-                        <li>Click <strong>Start</strong> and enter your Apple ID password if prompted (sent securely to Apple).</li>
-                        <li>On your device, open <strong>Settings > General > VPN & Device Management</strong>, select your Apple ID, and tap <strong>Trust</strong>.</li>
-                    </ol>
-                </div>
+            <!-- macOS Installation Guide Sub-section -->
+            <div style="margin-top: 4rem;">
+                <h3 style="font-size: 1.6rem; color: var(--text-primary); font-family: var(--font-heading); font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.75rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🍎</span> macOS Installation & Sideloading
+                </h3>
+                
+                <div class="sideload-methods" style="margin-top: 0;">
+                    <!-- Method 1: Bypassing Gatekeeper for Native Mac App -->
+                    <div class="sideload-method-box">
+                        <h3>1. Bypass Gatekeeper (Native macOS App)</h3>
+                        <p>Because the desktop app is unsigned, macOS Gatekeeper will block execution when first opened. You must clear the quarantine attributes:</p>
+                        <ol>
+                            <li>Extract the downloaded <code>airboard-macos.zip</code> bundle.</li>
+                            <li>Move <strong>AirBoard.app</strong> into your <strong>/Applications</strong> directory.</li>
+                            <li>Open <strong>Terminal.app</strong> (located in Applications > Utilities).</li>
+                            <li>Run the following command to clear quarantine flags:
+                                <pre style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 0.75rem 1rem; border-radius: 8px; color: var(--text-primary); font-family: monospace; font-size: 0.85rem; margin-top: 0.5rem; overflow-x: auto; white-space: pre;">xattr -cr /Applications/AirBoard.app</pre>
+                            </li>
+                            <li>Double-click the app to launch it instantly!</li>
+                            <li><em>Alternative:</em> Right-click the app, choose <strong>Open</strong>, and click <strong>Open</strong> on the verification popup. Or go to <strong>System Settings > Privacy & Security</strong> and click <strong>Open Anyway</strong> under the blocked app list.</li>
+                        </ol>
+                    </div>
 
-                <!-- Method 2: AltStore / TrollStore -->
-                <div class="sideload-method-box">
-                    <h3>Method 2: AltStore & TrollStore</h3>
-                    <p>If you already use a mobile installer directly on your device:</p>
-                    <ul>
-                        <li><strong>AltStore:</strong> Download the <code>.ipa</code> directly on your device, open AltStore, tap the <strong>"+"</strong> button on the My Apps tab, and select the AirBoard file.</li>
-                        <li><strong>TrollStore:</strong> Works permanently if your device runs a compatible iOS version (iOS 14.0 - 16.6.1). Open the <code>.ipa</code> using TrollStore to install it permanently without the 7-day developer expiration.</li>
-                    </ul>
+                    <!-- Method 2: Running iOS App on Apple Silicon Mac -->
+                    <div class="sideload-method-box">
+                        <h3>2. Run iOS App on macOS (Apple Silicon only)</h3>
+                        <p>You can run the universal iOS app layout natively on Apple Silicon Macs (M1/M2/M3/M4 systems) using sideload tools:</p>
+                        <ol>
+                            <li>Download the <strong>AirBoard IPA</strong> file onto your Mac.</li>
+                            <li>Download and install <a href="https://playcover.io/" target="_blank" style="color: #00f2fe; text-decoration: underline;"><strong>PlayCover</strong></a> (an open-source tool for running iOS apps natively on macOS with keyboard/mouse support).</li>
+                            <li>Open PlayCover and drag the downloaded <code>.ipa</code> file directly into the app catalog window to install and sign it locally.</li>
+                            <li>Double-click the AirBoard icon inside PlayCover to run it.</li>
+                            <li><em>Alternative (Sideloadly):</em> Open <a href="https://sideloadly.io/" target="_blank" style="color: #00f2fe; text-decoration: underline;"><strong>Sideloadly</strong></a> on your Mac, choose **Apple Silicon Mac** under devices, drag the IPA, enter your Apple ID, and click **Start** to sign and install it.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- iOS Installation Guide Sub-section -->
+            <div style="margin-top: 4rem;">
+                <h3 style="font-size: 1.6rem; color: var(--text-primary); font-family: var(--font-heading); font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.75rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>📱</span> iOS Sideloading (iPhone & iPad)
+                </h3>
+                
+                <div class="sideload-methods" style="margin-top: 0;">
+                    <!-- Method 1: Sideloadly -->
+                    <div class="sideload-method-box">
+                        <h3>Method 1: Sideloadly (Easiest)</h3>
+                        <p>Sideloadly is a free desktop program (Windows/macOS) that installs apps using your Apple ID. It is highly reliable.</p>
+                        <ol>
+                            <li>Download and install <a href="https://sideloadly.io/" target="_blank" style="color: #00f2fe; text-decoration: underline;"><strong>Sideloadly</strong></a> on your computer.</li>
+                            <li>Download the <strong>AirBoard IPA</strong> file above onto your computer.</li>
+                            <li>Connect your device (iPhone/iPad) to your computer using a USB cable.</li>
+                            <li>Open Sideloadly, select your device, and enter your Apple ID.</li>
+                            <li>Drag and drop the downloaded <code>.ipa</code> file into Sideloadly.</li>
+                            <li>Click <strong>Start</strong> and enter your Apple ID password if prompted (sent securely to Apple).</li>
+                            <li>On your device, open <strong>Settings > General > VPN & Device Management</strong>, select your Apple ID, and tap <strong>Trust</strong>.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Method 2: AltStore / TrollStore -->
+                    <div class="sideload-method-box">
+                        <h3>Method 2: AltStore & TrollStore</h3>
+                        <p>If you already use a mobile installer directly on your device:</p>
+                        <ul>
+                            <li><strong>AltStore:</strong> Download the <code>.ipa</code> directly on your device, open <a href="https://altstore.io/" target="_blank" style="color: #00f2fe; text-decoration: underline;"><strong>AltStore</strong></a>, tap the <strong>"+"</strong> button on the My Apps tab, and select the AirBoard file.</li>
+                            <li><strong>TrollStore:</strong> Works permanently if your device runs a compatible iOS version (iOS 14.0 - 16.6.1). Refer to the <a href="https://ios.cfw.guide/installing-trollstore/" target="_blank" style="color: #00f2fe; text-decoration: underline;"><strong>TrollStore Guide</strong></a> and open the <code>.ipa</code> using TrollStore to install it permanently without the 7-day developer expiration.</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
