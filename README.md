@@ -26,10 +26,10 @@ To learn more about the engineering details of this project, check out these ded
 
 ## 🌐 Product Showcase Website
 
-The product showcase website is located in the [web_showcase/](file:///home/sanal-sivakumar/Documents/clipboard/web_showcase) directory.
+The product showcase website is live and hosted on GitHub Pages:
+*   **Live Web Address**: [https://sanal-sivakumar.github.io/AirBoard/](https://sanal-sivakumar.github.io/AirBoard/)
 
-*   **Local Host Address**: [http://localhost:8080](http://localhost:8080)
-*   **Launch Command**: `python3 -m http.server 8080 --directory web_showcase`
+*(Alternatively, you can run it locally from the [web_showcase/](file:///home/sanal-sivakumar/Documents/clipboard/web_showcase) directory using `python3 -m http.server 8080 --directory web_showcase` at http://localhost:8080)*
 
 ---
 
