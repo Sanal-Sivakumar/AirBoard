@@ -658,6 +658,37 @@ h1, h2, h3 {
     margin-top: auto;
 }
 
+.download-btn span {
+    transition: opacity 0.12s ease-in-out;
+}
+
+/* Highlighted card with gradient border and recommended label */
+.download-card.highlighted {
+    border-color: var(--accent-cyan);
+    background: linear-gradient(135deg, rgba(0, 242, 254, 0.04), rgba(0, 113, 227, 0.04));
+    box-shadow: 0 15px 35px rgba(0, 242, 254, 0.15);
+    position: relative;
+}
+
+.download-card.highlighted::before {
+    content: 'Recommended for you';
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(95deg, var(--accent-cyan), var(--accent-blue));
+    color: var(--bg-dark);
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.35rem 0.85rem;
+    border-radius: 980px;
+    box-shadow: 0 4px 12px rgba(0, 242, 254, 0.35);
+    white-space: nowrap;
+    z-index: 10;
+}
+
 /* Downloads notice & Sideload hint */
 .downloads-notice {
     margin-top: 4rem;

@@ -359,3 +359,89 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// --- OS Auto-Detection & Download Highlighting ---
+document.addEventListener('DOMContentLoaded', () => {
+    const ua = navigator.userAgent || '';
+    const platform = navigator.platform || '';
+    const maxTouchPoints = navigator.maxTouchPoints || 0;
+    
+    let detectedOS = 'android'; // Default fallback
+    
+    if (/iPad|iPhone|iPod/.test(ua) || (ua.includes('Macintosh') && maxTouchPoints > 0)) {
+        detectedOS = 'ios';
+    } else if (/Mac/.test(platform) || ua.includes('Mac OS X')) {
+        detectedOS = 'macos';
+    } else if (/Win/.test(platform) || ua.includes('Windows')) {
+        detectedOS = 'windows';
+    } else if (/Android/.test(ua)) {
+        detectedOS = 'android';
+    } else if (/Linux/.test(platform) || ua.includes('Linux')) {
+        detectedOS = 'linux';
+    }
+    
+    const cards = document.querySelectorAll('.download-card');
+    cards.forEach(card => {
+        const platformName = card.querySelector('.download-platform').textContent.toLowerCase();
+        const btn = card.querySelector('.download-btn');
+        
+        let matches = false;
+        if (detectedOS === 'android' && platformName.includes('android')) matches = true;
+        if (detectedOS === 'linux' && platformName.includes('linux')) matches = true;
+        if (detectedOS === 'ios' && (platformName.includes('ios') || platformName.includes('ipad'))) matches = true;
+        if (detectedOS === 'macos' && platformName.includes('macos')) matches = true;
+        if (detectedOS === 'windows' && platformName.includes('windows')) matches = true;
+        
+        if (matches) {
+            card.classList.add('highlighted');
+            if (btn) {
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-primary');
+            }
+        } else {
+            card.classList.remove('highlighted');
+            if (btn) {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            }
+        }
+    });
+});
+
+// --- File Size Hover Effect ---
+document.addEventListener('DOMContentLoaded', () => {
+    const downloadBtns = document.querySelectorAll('.download-btn');
+    downloadBtns.forEach(btn => {
+        const size = btn.getAttribute('data-size');
+        if (!size) return;
+        
+        const textSpan = btn.querySelector('span');
+        if (!textSpan) return;
+        
+        const originalText = textSpan.textContent;
+        let isHovered = false;
+        
+        btn.addEventListener('mouseenter', () => {
+            isHovered = true;
+            textSpan.style.opacity = '0';
+            setTimeout(() => {
+                if (isHovered) {
+                    textSpan.textContent = `${originalText} (${size})`;
+                    textSpan.style.opacity = '1';
+                }
+            }, 120);
+        });
+        
+        btn.addEventListener('mouseleave', () => {
+            isHovered = false;
+            textSpan.style.opacity = '0';
+            setTimeout(() => {
+                if (!isHovered) {
+                    textSpan.textContent = originalText;
+                    textSpan.style.opacity = '1';
+                }
+            }, 120);
+        });
+    });
+});
+
