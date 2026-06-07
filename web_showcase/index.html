@@ -425,6 +425,68 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Windows Installation Guide Sub-section -->
+            <div style="margin-top: 4rem;">
+                <h3 style="font-size: 1.6rem; color: var(--text-primary); font-family: var(--font-heading); font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.75rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>❖</span> Windows Installation & Setup
+                </h3>
+                
+                <div class="sideload-methods" style="margin-top: 0;">
+                    <!-- Windows Setup Steps -->
+                    <div class="sideload-method-box">
+                        <h3>1. Run the Executable</h3>
+                        <p>AirBoard on Windows is distributed as a portable ZIP package. No installation wizard is required:</p>
+                        <ol>
+                            <li>Download the <strong>Windows ZIP</strong> file from the Downloads section above.</li>
+                            <li>Extract the downloaded <code>airboard-windows.zip</code> file to a folder of your choice (e.g., <code>Documents\AirBoard</code>).</li>
+                            <li>Open the extracted folder and locate the main executable named <strong><code>clipboard.exe</code></strong> (or <strong><code>airboard.exe</code></strong>).</li>
+                            <li>Double-click the executable to launch the application.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Windows System Prompts -->
+                    <div class="sideload-method-box">
+                        <h3>2. SmartScreen & Firewall Approvals</h3>
+                        <p>Since the application is not signed with a Microsoft developer certificate, you must grant the following security clearances:</p>
+                        <ol>
+                            <li><strong>Windows SmartScreen Bypass:</strong> If a blue "Windows protected your PC" window appears, click <strong>"More info"</strong>, and then select the <strong>"Run anyway"</strong> button.</li>
+                            <li><strong>Defender Firewall Access:</strong> When the app launches, Windows Defender Firewall will prompt you to allow network access. You <strong>must select both "Private networks" and "Public networks"</strong>, then click <strong>"Allow access"</strong>. This is required for peer discovery.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Android Background Optimization & Permissions Guide -->
+            <div style="margin-top: 4rem;">
+                <h3 style="font-size: 1.6rem; color: var(--text-primary); font-family: var(--font-heading); font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.75rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🤖</span> Android Background & Permissions Guide
+                </h3>
+                
+                <div class="sideload-methods" style="margin-top: 0;">
+                    <!-- Permissions Box -->
+                    <div class="sideload-method-box">
+                        <h3>1. Grant Essential Permissions</h3>
+                        <p>Android 10+ has strict control over notifications and clipboard access. Ensure these options are configured:</p>
+                        <ol>
+                            <li><strong>Clipboard Sync Service:</strong> When opening the app, grant the requested permissions to let AirBoard monitor and read your clipboard.</li>
+                            <li><strong>Persistent Notification:</strong> AirBoard uses a foreground service notification to keep the P2P connection alive. Make sure notifications are allowed and not blocked.</li>
+                            <li><strong>Turn OFF "Pause App Activity If Unused":</strong> Go to your phone's <strong>Settings > Apps > AirBoard</strong> and ensure <strong>"Pause app activity if unused"</strong> (or "Remove permissions if app isn't used") is turned **OFF**. This prevents Android from automatically stripping clipboard access.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Background Activity Box -->
+                    <div class="sideload-method-box">
+                        <h3>2. Battery & Background Activity</h3>
+                        <p>Android's aggressive battery savers will kill background network activities. Prevent this with these steps:</p>
+                        <ol>
+                            <li><strong>Unrestricted Battery Usage:</strong> Go to <strong>Settings > Apps > AirBoard > Battery</strong> and change the setting to <strong>"Unrestricted"</strong> (default is "Optimized").</li>
+                            <li><strong>Autostart Permission:</strong> If you are on an OEM skin (e.g. Xiaomi MIUI/HyperOS, OnePlus OxygenOS, Oppo, Vivo, or Huawei), find <strong>"Autostart"</strong> or <strong>"App Auto-launch"</strong> in your settings and turn it **ON** for AirBoard.</li>
+                            <li><strong>Exclude from Task Killer:</strong> Open your recent apps list (multitasker), find AirBoard, press and hold the app window, and tap the <strong>Lock</strong> icon to prevent the system task manager from wiping it.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
