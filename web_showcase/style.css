@@ -219,6 +219,41 @@ h1, h2, h3 {
     color: var(--text-primary);
 }
 
+/* Mobile Hamburger Button */
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 22px;
+    height: 16px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 110;
+}
+
+.hamburger-bar {
+    width: 100%;
+    height: 2px;
+    background-color: var(--text-primary);
+    border-radius: 2px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Transform Hamburger into an "X" when active */
+.nav-toggle.active .hamburger-bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.nav-toggle.active .hamburger-bar:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle.active .hamburger-bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
 .nav-links a.nav-cta {
     padding: 0.45rem 1.1rem;
     font-size: 0.8rem;
@@ -1013,9 +1048,44 @@ h1, h2, h3 {
     .btn-large {
         width: 100%;
     }
-    .nav-links a:not(.nav-cta) {
-        display: none;
+    .nav-toggle {
+        display: flex;
     }
+    
+    .nav-links {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 260px;
+        height: 100vh;
+        background: rgba(10, 10, 15, 0.95);
+        backdrop-filter: blur(35px);
+        -webkit-backdrop-filter: blur(35px);
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 3rem;
+        padding: 3rem 2rem;
+        transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 105;
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    .nav-links.active {
+        right: 0;
+    }
+    
+    .nav-links a {
+        font-size: 1.15rem;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .nav-links a.nav-cta {
+        margin-top: 1rem;
+    }
+
     .developer-card, .sideload-card-container, .faq-card-container {
         padding: 3rem 1.5rem;
     }

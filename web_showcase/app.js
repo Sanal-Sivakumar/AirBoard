@@ -153,6 +153,11 @@ function init3D() {
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('scroll', onWindowScroll);
+    
+    // Mobile Touch interaction
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd);
 
     // Start Rendering Loop
     animate();
@@ -183,6 +188,28 @@ function addLighting() {
 function onMouseMove(event) {
     targetMouseX = (event.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
     targetMouseY = (event.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
+}
+
+// Mobile Touch coordinates conversion
+function onTouchStart(event) {
+    if (event.touches.length > 0) {
+        const touch = event.touches[0];
+        targetMouseX = (touch.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+        targetMouseY = (touch.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
+    }
+}
+
+function onTouchMove(event) {
+    if (event.touches.length > 0) {
+        const touch = event.touches[0];
+        targetMouseX = (touch.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+        targetMouseY = (touch.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
+    }
+}
+
+function onTouchEnd() {
+    targetMouseX = 0;
+    targetMouseY = 0;
 }
 
 // Calculate scroll depth percentage and scroll velocity
@@ -309,4 +336,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+});
+
+// --- Mobile Navigation Drawer Toggle ---
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('nav-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    
+    if (toggleBtn && navLinks) {
+        toggleBtn.addEventListener('click', () => {
+            toggleBtn.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+        
+        // Close menu when clicking on any link
+        const links = navLinks.querySelectorAll('a');
+        links.forEach(link => {
+            link.addEventListener('click', () => {
+                toggleBtn.classList.remove('active');
+                navLinks.classList.remove('active');
+            });
+        });
+    }
 });
