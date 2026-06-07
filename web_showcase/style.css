@@ -818,6 +818,91 @@ h1, h2, h3 {
     }
 }
 
+/* FAQ Section */
+.faq-section {
+    padding: 6rem 0;
+}
+
+.faq-card-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    padding: 4.5rem 3.5rem;
+    border-radius: 32px;
+}
+
+.faq-list {
+    margin-top: 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.faq-item {
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+}
+
+.faq-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.faq-question {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+}
+
+.faq-icon {
+    font-size: 1.5rem;
+    color: var(--accent-cyan);
+    transition: transform 0.35s ease;
+    margin-left: 1rem;
+}
+
+.faq-item.active .faq-icon {
+    transform: rotate(45deg);
+    color: #ff007f;
+}
+
+/* Modern smooth height transition using CSS Grid */
+.faq-answer {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s ease-out, padding 0.35s ease;
+    padding: 0 2rem;
+}
+
+.faq-item.active .faq-answer {
+    grid-template-rows: 1fr;
+    padding: 0 2rem 1.5rem 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.faq-answer p {
+    overflow: hidden;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
 /* Bento 4: Mesh Network Visual */
 .visual-mesh {
     position: relative;
@@ -931,7 +1016,7 @@ h1, h2, h3 {
     .nav-links a:not(.nav-cta) {
         display: none;
     }
-    .developer-card, .sideload-card-container {
+    .developer-card, .sideload-card-container, .faq-card-container {
         padding: 3rem 1.5rem;
     }
 }

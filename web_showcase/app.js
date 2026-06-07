@@ -34,6 +34,9 @@ let particlesData = [];
 let targetMouseX = 0, targetMouseY = 0;
 let currentMouseX = 0, currentMouseY = 0;
 let scrollPercent = 0;
+let lastScrollY = 0;
+let scrollSpeedTarget = 0;
+let scrollSpeedCurrent = 0;
 
 const PARTICLE_COUNT = 450;
 const P_KNOT = 2; // Torus knot configuration p
@@ -182,12 +185,17 @@ function onMouseMove(event) {
     targetMouseY = (event.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
 }
 
-// Calculate scroll depth percentage
+// Calculate scroll depth percentage and scroll velocity
 function onWindowScroll() {
     const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
     if (totalHeight > 0) {
         scrollPercent = window.scrollY / totalHeight;
     }
+    
+    const currentScrollY = window.scrollY;
+    const deltaY = Math.abs(currentScrollY - lastScrollY);
+    scrollSpeedTarget = Math.min(deltaY * 0.08, 6.0); // Cap the acceleration burst
+    lastScrollY = currentScrollY;
 }
 
 // Handle window resizing scale
@@ -212,25 +220,45 @@ function animate() {
         torusKnot.scale.set(morphScale, morphScale, morphScale);
     }
 
-    // 2. Animate and flow the particle stream along the Torus Knot mathematics
+    // 2. Ease scroll speed and decay
+    scrollSpeedCurrent += (scrollSpeedTarget - scrollSpeedCurrent) * 0.08;
+    scrollSpeedTarget *= 0.92; // Rapid decay when scrolling stops
+
+    // Calculate local mouse coordinates for gravity pull
+    const mouse3D = new THREE.Vector3(currentMouseX * 5, -currentMouseY * 3, 0);
+
+    // Animate and flow the particle stream along the Torus Knot mathematics
     if (particleSystem && particleGeometry) {
         const positions = particleGeometry.attributes.position.array;
 
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             const data = particlesData[i];
             
-            // Advance particle progress along loop
-            data.t += data.speed;
+            // Advance particle progress along loop (accelerated by scroll speed)
+            data.t += data.speed * (1.0 + scrollSpeedCurrent);
             if (data.t > Math.PI * 2) {
                 data.t -= Math.PI * 2; // Loop back around
             }
 
-            // Calculate new 3D location coordinate
+            // Calculate base 3D location coordinate
             const newPoint = getTorusKnotPoint(data.t);
             
-            positions[i * 3] = newPoint.x;
-            positions[i * 3 + 1] = newPoint.y;
-            positions[i * 3 + 2] = newPoint.z;
+            // Apply elastic cursor gravity bending
+            const dx = newPoint.x - mouse3D.x;
+            const dy = newPoint.y - mouse3D.y;
+            const dz = newPoint.z - mouse3D.z;
+            const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            
+            if (dist < 2.5) {
+                const pullFactor = (1.0 - (dist / 2.5)) * 0.35; // Stronger pull when closer
+                positions[i * 3] = newPoint.x + (mouse3D.x - newPoint.x) * pullFactor;
+                positions[i * 3 + 1] = newPoint.y + (mouse3D.y - newPoint.y) * pullFactor;
+                positions[i * 3 + 2] = newPoint.z + (mouse3D.z - newPoint.z) * pullFactor;
+            } else {
+                positions[i * 3] = newPoint.x;
+                positions[i * 3 + 1] = newPoint.y;
+                positions[i * 3 + 2] = newPoint.z;
+            }
         }
 
         // Inform WebGL buffer that positions have changed
@@ -260,3 +288,25 @@ function animate() {
 
 // Start Three.js when page loaded
 window.onload = init3D;
+
+// --- FAQ Accordion Toggles ---
+document.addEventListener('DOMContentLoaded', () => {
+    const faqQuestions = document.querySelectorAll('.faq-question');
+    
+    faqQuestions.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const faqItem = btn.parentElement;
+            const isActive = faqItem.classList.contains('active');
+            
+            // Close all other FAQ items
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Toggle active class on clicked item
+            if (!isActive) {
+                faqItem.classList.add('active');
+            }
+        });
+    });
+});

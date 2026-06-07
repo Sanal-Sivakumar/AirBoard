@@ -378,6 +378,71 @@
         </div>
     </section>
 
+    <!-- FAQ Section -->
+    <section id="faq" class="faq-section container">
+        <div class="faq-card-container fade-in">
+            <span class="section-subtitle">Frequently Asked Questions</span>
+            <h2 class="section-title">Have Questions? We Have Answers.</h2>
+            
+            <div class="faq-list">
+                <!-- FAQ Item 1 -->
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>🔒 Does AirBoard store or send my clipboard history to any cloud servers?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>No, never. AirBoard is built on a strict zero-trust, offline-first peer-to-peer (P2P) architecture. Your clipboard content stays entirely within your local network (LAN) and is sent directly from one device to another. There are no registration forms, no cloud servers, and no third-party tracking.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>⚡ How fast does the sync happen? Is there any latency?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Clipboard synchronization is virtually instantaneous, taking less than 50 milliseconds. Because data transfers directly between devices over local sockets rather than routing through the internet to a remote server, there is zero lag or latency.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>🔑 How is the P2P connection secured?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>All communications are encrypted end-to-end. Device identity key pairs are generated locally using Ed25519 signing. Every sync session is established through an ephemeral X25519 Diffie-Hellman cryptographic handshake, and data packets are secured using ChaCha20-Poly1305 symmetric encryption. Only paired devices with matching keys can decrypt your data.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 4 -->
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>🔋 Will the background service drain my device battery?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>AirBoard is highly optimized for power efficiency. On Android, it uses a lightweight local TCP loopback service, while on iOS/macOS, it employs standard low-power OS timers and passive socket listening. It remains idle until a local copy event is triggered, ensuring near-zero battery drain.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 5 -->
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>📄 What is the license for this project? Can I use the source code?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>AirBoard is 100% free and open-source software distributed under the GNU General Public License v3 (GPL v3). You are encouraged to read the source code, build your own custom clients, and contribute to the official repository. Any modified versions or derivative works you share must also be kept open-source under the GPL v3.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Developer Section -->
     <section class="developer-section">
         <div class="container">
