@@ -1,6 +1,6 @@
 # AirBoard - Decentralized Cross-Platform P2P Clipboard Sync
 
-AirBoard is a free, open-source, zero-trust, serverless peer-to-peer (P2P) clipboard synchronization system. It securely shares clipboard data across Android, Linux, iPadOS, and Windows devices on your local network (LAN) in less than 50 milliseconds.
+AirBoard is a free, open-source, zero-trust, serverless peer-to-peer (P2P) clipboard synchronization system. It securely shares clipboard data across Android, iOS, iPadOS, macOS, Linux, and Windows devices on your local network (LAN) in less than 50 milliseconds.
 
 Unlike cloud-dependent alternatives that upload your sensitive data to third-party databases, AirBoard operates entirely locally. Your copy-paste streams are encrypted end-to-end and transmitted directly between your paired devices.
 
