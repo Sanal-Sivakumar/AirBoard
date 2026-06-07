@@ -53,6 +53,19 @@ class SyncHomeScreen extends StatefulWidget {
 }
 
 class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObserver {
+  static const List<String> _meaningfulDeviceNames = [
+    "Air Kite", "Cloud Swift", "Sky Lark", "Storm Petrel", "Wind Weaver",
+    "Zephyr Node", "Jet Stream", "Aero Glider", "Solar Wind", "Star Hawk",
+    "Night Owl", "Blue Jay", "Mist Walker", "Polar Express", "Solar Glide",
+    "Comet Tail", "Nimbus Core", "Alpine Eagle", "Wave Rider", "Echo Signal",
+    "Nova Spark", "Cosmic Ray", "Aurora Board", "Vapor Sync", "Breeze Bound",
+    "Gale Force", "Stratos Core", "Orbit Lynx", "Falcon Flight", "Horizon Beam",
+    "Nebula Node", "Glide Stream", "Nexus Wave", "Helix Sync", "Sonic Wave",
+    "Vortex Sync", "Drift Wood", "Swift Air", "Aero Drift", "Thunder Wing",
+    "Nimbus Board", "Thermal Glide", "Zenith Spark", "Pulse Stream", "Astro Link",
+    "Cyber Kite", "Quantum Leap", "Whispering Wind", "Beacon Ray", "Mirage Air"
+  ];
+
   static const _serviceChannel = MethodChannel('com.example.clipboard/service');
   static const _clipboardChannel = MethodChannel('com.example.clipboard/clipboard');
   final _secureStorage = const FlutterSecureStorage();
@@ -85,8 +98,8 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
   @override
   void initState() {
     super.initState();
+    _nameController.text = "AirBoard Device";
     if (Platform.isAndroid) {
-      _nameController.text = "Android Phone";
       _serviceChannel.setMethodCallHandler((call) async {
         if (call.method == 'sendClipboardToPC') {
           final String? text = call.arguments as String?;
@@ -100,12 +113,6 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
           }
         }
       });
-    } else if (Platform.isIOS) {
-      _nameController.text = "iPad Client";
-    } else if (Platform.isWindows) {
-      _nameController.text = "Windows PC";
-    } else {
-      _nameController.text = "Linux PC";
     }
     _initializeSecurityKeysAndRust();
     _detectLocalIp();
@@ -208,6 +215,19 @@ class _SyncHomeScreenState extends State<SyncHomeScreen> with WidgetsBindingObse
       }
       setState(() {
         _deviceId = savedId!;
+      });
+
+      // 1b. Resolve Device Name
+      String? savedName = await _secureStorage.read(key: 'device_name');
+      if (savedName == null || savedName.isEmpty) {
+        final randomName = _meaningfulDeviceNames[Random().nextInt(_meaningfulDeviceNames.length)];
+        await _secureStorage.write(key: 'device_name', value: randomName);
+        _nameController.text = randomName;
+      } else {
+        _nameController.text = savedName;
+      }
+      _nameController.addListener(() {
+        _secureStorage.write(key: 'device_name', value: _nameController.text.trim());
       });
 
       // 2. Load or Generate Cryptographic Keys
