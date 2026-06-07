@@ -148,13 +148,57 @@
                 <!-- Bento 4: Rust-Powered P2P (Wide Card) -->
                 <div class="bento-card bento-wide fade-in">
                     <div class="bento-visual visual-mesh">
-                        <!-- Custom mesh network visual nodes -->
-                        <div class="mesh-node node-a">Phone</div>
-                        <div class="mesh-node node-b">Tablet</div>
-                        <div class="mesh-node node-c">Mac / PC</div>
-                        <div class="mesh-line line-ab"></div>
-                        <div class="mesh-line line-bc"></div>
-                        <div class="mesh-line line-ca"></div>
+                        <svg class="mesh-svg" viewBox="0 0 240 180" width="240" height="180" style="display: block; max-width: 100%;">
+                            <defs>
+                                <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--accent-blue)" stop-opacity="0.8" />
+                                    <stop offset="100%" stop-color="var(--accent-cyan)" stop-opacity="0.8" />
+                                </linearGradient>
+                                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="3" result="blur" />
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                </filter>
+                            </defs>
+
+                            <!-- Connection Lines -->
+                            <g stroke="url(#line-grad)" stroke-width="2" opacity="0.6">
+                                <line x1="120" y1="30" x2="50" y2="145" />
+                                <line x1="50" y1="145" x2="190" y2="145" />
+                                <line x1="190" y1="145" x2="120" y2="30" />
+                            </g>
+
+                            <!-- Animated Data Particles -->
+                            <g fill="var(--accent-cyan)" filter="url(#glow)">
+                                <circle r="3.5">
+                                    <animateMotion dur="2.5s" repeatCount="indefinite" path="M120,30 L50,145" />
+                                </circle>
+                                <circle r="2.5">
+                                    <animateMotion dur="2s" repeatCount="indefinite" path="M50,145 L190,145" />
+                                </circle>
+                                <circle r="3.5">
+                                    <animateMotion dur="3s" repeatCount="indefinite" path="M190,145 L120,30" />
+                                </circle>
+                            </g>
+
+                            <!-- Nodes -->
+                            <!-- Node A: Phone -->
+                            <g transform="translate(120, 30)">
+                                <rect x="-37" y="-15" width="74" height="30" rx="8" fill="#0d0d10" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.2" />
+                                <text y="4" fill="var(--text-primary)" font-size="11" font-family="var(--font-body)" font-weight="700" text-anchor="middle" letter-spacing="0.02em">Phone</text>
+                            </g>
+
+                            <!-- Node B: Tablet -->
+                            <g transform="translate(50, 145)">
+                                <rect x="-37" y="-15" width="74" height="30" rx="8" fill="#0d0d10" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.2" />
+                                <text y="4" fill="var(--text-primary)" font-size="11" font-family="var(--font-body)" font-weight="700" text-anchor="middle" letter-spacing="0.02em">Tablet</text>
+                            </g>
+
+                            <!-- Node C: Mac / PC -->
+                            <g transform="translate(190, 145)">
+                                <rect x="-47" y="-15" width="94" height="30" rx="8" fill="#0d0d10" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.2" />
+                                <text y="4" fill="var(--text-primary)" font-size="11" font-family="var(--font-body)" font-weight="700" text-anchor="middle" letter-spacing="0.02em">Mac / PC</text>
+                            </g>
+                        </svg>
                     </div>
                     <div class="bento-content">
                         <div class="bento-icon bg-cyan">

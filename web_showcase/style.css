@@ -941,63 +941,15 @@ h1, h2, h3 {
 /* Bento 4: Mesh Network Visual */
 .visual-mesh {
     position: relative;
-    width: 220px;
-    height: 160px;
+    width: 240px;
+    height: 180px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.mesh-node {
-    position: absolute;
-    padding: 0.5rem 1rem;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    font-size: 0.75rem;
-    font-weight: bold;
-    color: var(--text-primary);
-    z-index: 2;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.node-a { top: 10px; left: 60px; }
-.node-b { bottom: 10px; left: 10px; }
-.node-c { bottom: 10px; right: 10px; }
-
-.mesh-line {
-    position: absolute;
-    background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
-    opacity: 0.4;
-    z-index: 1;
-}
-
-/* Connect Node A (top) to Node B (bottom left) */
-.line-ab {
-    width: 2px;
-    height: 90px;
-    top: 35px;
-    left: 80px;
-    transform: rotate(30deg);
-    transform-origin: top center;
-}
-
-/* Connect Node B (bottom left) to Node C (bottom right) */
-.line-bc {
-    width: 130px;
-    height: 2px;
-    bottom: 25px;
-    left: 45px;
-}
-
-/* Connect Node C (bottom right) to Node A (top) */
-.line-ca {
-    width: 2px;
-    height: 90px;
-    top: 35px;
-    right: 80px;
-    transform: rotate(-30deg);
-    transform-origin: top center;
+.mesh-svg {
+    filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4));
 }
 
 /* Responsive Scaling */
@@ -1012,7 +964,7 @@ h1, h2, h3 {
     }
     .visual-loopback, .visual-mesh {
         padding-left: 0;
-        margin-top: 2rem;
+        margin: 2rem 0;
     }
 }
 
