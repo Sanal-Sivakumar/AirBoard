@@ -778,6 +778,8 @@ class _SyncHomeScreenState extends State<SyncHomeScreen>
       _log("Initializing Secure P2P Engine...");
       final devName = _nameController.text.trim();
 
+      await _detectLocalIp();
+
       if (Platform.isAndroid) {
         try {
           final bool? ignoringBattery = await _serviceChannel
@@ -826,7 +828,7 @@ class _SyncHomeScreenState extends State<SyncHomeScreen>
           platform: platformStr,
           deviceId: _deviceId,
         );
-        _log("P2P server running. Local Storage: $storageDir");
+        _log("P2P startup requested. Local storage: $storageDir");
 
         if (Platform.isAndroid) {
           _startAndroidClipboardPoller();
@@ -1121,11 +1123,42 @@ class _SyncHomeScreenState extends State<SyncHomeScreen>
             onUnpair: (device) {
               _showUnpairConfirmation(device.id, device.name);
             },
-            onManualConnect: () {
+            onManualConnect: () async {
               final ip = _manualIpController.text.trim();
               if (ip.isEmpty) return;
+
+              if (_deviceId == "Loading..." || _myFingerprint == "Loading...") {
+                _log("Identity setup is still in progress; try again shortly.");
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text(
+                      'AirBoard is still preparing this device identity. Try again in a moment.'),
+                ));
+                return;
+              }
+
+              if (!_isSyncEnabled) {
+                _log("Enabling synchronization for manual pairing...");
+                await _toggleSync(true);
+              }
+
               _log("Initiating manual pairing to $ip...");
-              api.initiatePairingToIp(ipOrAddr: ip);
+              try {
+                await api.initiatePairingToIp(ipOrAddr: ip);
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Pairing request sent to $ip'),
+                  duration: const Duration(seconds: 3),
+                ));
+              } catch (error) {
+                _log("Manual pairing failed: $error");
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(
+                      'Could not contact $ip. Check its firewall and synchronization status.'),
+                  duration: const Duration(seconds: 5),
+                ));
+              }
             },
           )
         : SettingsScreen(

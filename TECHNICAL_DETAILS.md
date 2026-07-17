@@ -39,7 +39,7 @@ Every active device sends a JSON announcement every five seconds to UDP port `45
 
 Announcements are metadata, not trusted authentication. A hostile LAN participant can forge them. AirBoard treats discovery only as a way to locate a candidate address; pairing and session authentication establish trust.
 
-The broadcaster attempts the global IPv4 broadcast address, interface broadcast addresses available from the operating system, common `/24` and `/16` derived addresses, and the iOS hotspot broadcast address when applicable.
+The broadcaster sends to the administratively scoped multicast group `239.255.45.54` and also attempts the global IPv4 broadcast address, interface broadcast addresses available from the operating system, common `/24` and `/16` derived addresses, and the iOS hotspot broadcast address when applicable. Listeners join the multicast group when the platform permits it and continue listening for broadcasts if multicast setup fails.
 
 Manual IP pairing connects directly to TCP `45455` and is the fallback for AP isolation, blocked UDP, or asymmetric discovery.
 

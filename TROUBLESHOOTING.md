@@ -33,6 +33,8 @@ Check that:
 
 If discovery is blocked but direct LAN traffic works, enter the peer's LAN IP manually. Manual pairing still uses TCP `45455`; ports `45456` and `45457` are Android loopback bridges and are not manual-pairing ports.
 
+Synchronization must be running on both devices. The Devices screen accepts an IPv4 address with an optional port and enables synchronization automatically when **Connect** is pressed. iPadOS/iOS is client-only, so initiate pairing from the iPad using the Linux, Windows, or Android device's LAN IP.
+
 Useful checks:
 
 ```bash

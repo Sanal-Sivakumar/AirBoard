@@ -88,6 +88,17 @@ pub fn start_sync(storage_dir: String, device_name: String, platform: String, de
         let h_heartbeat = tokio::spawn(start_heartbeat_loop());
         let h_reconnect = tokio::spawn(start_reconnect_loop());
 
+        emit_event(SyncEvent::ConnectionStatus {
+            connected: false,
+            message: if is_ios {
+                "AirBoard networking started in iPadOS/iOS client mode. Pair from this device using the other device's LAN IP.".to_string()
+            } else {
+                format!(
+                    "AirBoard is listening for trusted peers on TCP {bound_port} and discovery on UDP 45454."
+                )
+            },
+        });
+
         let clipboard_handle = {
             #[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
             {

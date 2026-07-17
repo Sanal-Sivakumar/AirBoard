@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../models.dart';
@@ -153,68 +155,127 @@ class DevicesScreen extends StatelessWidget {
   }
 
   Widget _connectRow() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 6),
-      child: Row(children: [
-        Expanded(
-          child: GlassCard(
-            radius: AB.rSm,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: manualIpController,
-              style: AB.body,
-              decoration: InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
-                hintText: compact
-                    ? 'Enter IP…'
-                    : 'Add device by IP  ·  e.g. 192.168.43.10',
-                hintStyle: AB.body.copyWith(color: AB.text3),
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: manualIpController,
+      builder: (context, value, _) {
+        final input = value.text.trim();
+        final valid = _validIpv4Address(input);
+        final helper = input.isEmpty
+            ? 'Enter the LAN IP shown in AirBoard Settings on the other device.'
+            : valid
+                ? isSyncEnabled
+                    ? 'Ready to request mutually verified pairing.'
+                    : 'Connect will enable synchronization, then request pairing.'
+                : 'Use an IPv4 address such as 192.168.1.42 or 192.168.1.42:45455.';
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Expanded(
+                  child: GlassCard(
+                    radius: AB.rSm,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: TextField(
+                      controller: manualIpController,
+                      style: AB.body,
+                      keyboardType: TextInputType.url,
+                      textInputAction: TextInputAction.done,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      onSubmitted: valid ? (_) => onManualConnect() : null,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        border: InputBorder.none,
+                        hintText: compact
+                            ? 'LAN IP address'
+                            : 'Add device by IP  ·  e.g. 192.168.1.42',
+                        hintStyle: AB.body.copyWith(color: AB.text3),
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                _PrimaryButton(
+                  icon: Icons.link_rounded,
+                  label: compact ? null : 'Connect',
+                  onTap: valid ? onManualConnect : null,
+                ),
+              ]),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  helper,
+                  style: AB.sub.copyWith(
+                    color: valid && input.isNotEmpty ? AB.text2 : AB.text3,
+                    fontSize: 11.5,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ),
-        const SizedBox(width: 10),
-        _PrimaryButton(
-          icon: Icons.link_rounded,
-          label: compact ? null : 'Connect',
-          onTap: onManualConnect,
-        ),
-      ]),
+        );
+      },
     );
+  }
+
+  bool _validIpv4Address(String input) {
+    if (input.isEmpty) return false;
+    final separator = input.lastIndexOf(':');
+    final host = separator > 0 ? input.substring(0, separator) : input;
+    if (separator > 0) {
+      final port = int.tryParse(input.substring(separator + 1));
+      if (port == null || port < 1 || port > 65535) return false;
+    }
+    final address = InternetAddress.tryParse(host);
+    return address != null && address.type == InternetAddressType.IPv4;
   }
 }
 
 class _PrimaryButton extends StatelessWidget {
   final IconData icon;
   final String? label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   const _PrimaryButton({required this.icon, this.label, required this.onTap});
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-            horizontal: label == null ? 15 : 20, vertical: 13),
-        decoration: BoxDecoration(
-          gradient: AB.accentGrad,
+    final enabled = onTap != null;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: label ?? 'Connect to LAN IP',
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 180),
+        opacity: enabled ? 1 : .42,
+        child: Material(
+          color: enabled ? AB.accent : AB.glassHi,
           borderRadius: BorderRadius.circular(AB.rSm),
-          boxShadow: [
-            BoxShadow(color: AB.glow, blurRadius: 22, spreadRadius: -6)
-          ],
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AB.rSm),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: label == null ? 15 : 20, vertical: 13),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(icon,
+                    size: 16,
+                    color: enabled ? const Color(0xFF0A0B12) : AB.text2),
+                if (label != null) ...[
+                  const SizedBox(width: 8),
+                  Text(label!,
+                      style: AB.body.copyWith(
+                          color: enabled ? const Color(0xFF0A0B12) : AB.text2,
+                          fontWeight: FontWeight.w600)),
+                ],
+              ]),
+            ),
+          ),
         ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, size: 16, color: const Color(0xFF0A0B12)),
-          if (label != null) ...[
-            const SizedBox(width: 8),
-            Text(label!,
-                style: AB.body.copyWith(
-                    color: const Color(0xFF0A0B12),
-                    fontWeight: FontWeight.w600)),
-          ],
-        ]),
       ),
     );
   }

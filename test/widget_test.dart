@@ -1,6 +1,7 @@
-import 'dart:ui';
-
 import 'package:clipboard/main.dart';
+import 'package:clipboard/screens/devices_screen.dart';
+import 'package:clipboard/theme.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -33,5 +34,49 @@ void main() {
 
     expect(find.text('PAUSED'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('manual connect requires a valid LAN IPv4 address',
+      (tester) async {
+    final controller = TextEditingController();
+    var connectRequests = 0;
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AB.theme(),
+        home: Scaffold(
+          body: DevicesScreen(
+            pairedDevices: const [],
+            discoveredDevices: const [],
+            clipboardHistory: const [],
+            manualIpController: controller,
+            isSyncEnabled: false,
+            lastSyncTimestamp: 'Never',
+            onPair: (_) {},
+            onUnpair: (_) {},
+            onManualConnect: () => connectRequests++,
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.textContaining('Enter the LAN IP shown in AirBoard Settings'),
+      findsOneWidget,
+    );
+
+    await tester.enterText(find.byType(TextField), 'not-an-ip');
+    await tester.pump();
+    expect(find.textContaining('Use an IPv4 address'), findsOneWidget);
+    await tester.tap(find.text('Connect'));
+    expect(connectRequests, 0);
+
+    await tester.enterText(find.byType(TextField), '192.168.1.42');
+    await tester.pump();
+    expect(find.textContaining('Connect will enable synchronization'),
+        findsOneWidget);
+    await tester.tap(find.text('Connect'));
+    expect(connectRequests, 1);
   });
 }

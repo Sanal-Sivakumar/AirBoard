@@ -8,7 +8,7 @@ The current source implements protocol v2. Clipboard payloads are sent only afte
 
 ## What is implemented
 
-- UDP discovery on port `45454`, plus manual IP connection when broadcast discovery is blocked.
+- UDP multicast and broadcast discovery on port `45454`, plus manual IP connection when automatic discovery is blocked.
 - Direct WebSocket connections on TCP port `45455`.
 - Ed25519 device identity keys stored through `flutter_secure_storage`.
 - Full SHA-256 identity fingerprints shown for manual verification.
