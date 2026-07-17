@@ -2,6 +2,8 @@
 
 This guide applies to protocol v2 in the current source tree. Older binaries in `releases/` and legacy website downloads use an earlier protocol and must not be mixed with current builds.
 
+The website's Windows protocol-v2 package and the GitHub Actions iPadOS/iOS artifact are testing builds. Follow [TESTING.md](TESTING.md) and use non-sensitive sample clipboard data until cross-device validation is complete.
+
 ## Start here
 
 Run these checks from the repository root:

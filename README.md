@@ -53,6 +53,8 @@ The UI says **E2EE active** only while at least one authenticated peer is connec
 
 See [TECHNICAL_DETAILS.md](TECHNICAL_DETAILS.md) for the protocol and threat model and [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for platform-specific recovery steps.
 
+Before publishing a release, complete the Linux, Windows, Android, and iPad coverage in [TESTING.md](TESTING.md). The testing branch uses GitHub Actions to produce a Windows website download and an unsigned iPadOS/iOS artifact; neither should be treated as production-ready until that matrix passes.
+
 ## Pairing
 
 1. Put both devices on the same trusted LAN and enable synchronization.
