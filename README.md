@@ -76,6 +76,7 @@ Requirements:
 - Platform build tools for the target OS
 - Android: JDK 17, Android SDK, NDK `25.1.8937393`
 - Apple targets: a complete Xcode installation and CocoaPods
+- Linux: Flutter desktop prerequisites plus `libsecret-1-dev` to build and `libsecret-1-0` to run secure identity storage
 
 Install dependencies:
 

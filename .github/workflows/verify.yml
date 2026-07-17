@@ -68,8 +68,21 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Install Linux secure-storage build dependency
+        if: runner.os == 'Linux'
+        run: |
+          # AirBoard stores identity material through the desktop Secret Service.
+          sudo apt-get update
+          sudo apt-get install -y libsecret-1-dev libsecret-1-0
+
       - name: Analyze application
         run: flutter analyze
 
       - name: Run widget tests
         run: flutter test
+
+      - name: Build Linux desktop application
+        if: runner.os == 'Linux'
+        run: |
+          # This catches native plugin and modern-Clang compatibility failures.
+          flutter build linux --debug

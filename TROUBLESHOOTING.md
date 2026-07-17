@@ -158,8 +158,10 @@ The desktop clipboard backend requires a graphical clipboard environment. If it 
 For Ubuntu/Debian Flutter desktop prerequisites:
 
 ```bash
-sudo apt-get install clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+sudo apt-get install clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev libsecret-1-0
 ```
+
+AirBoard requires `flutter_secure_storage` v10 or newer on modern Linux toolchains. The older Linux backend bundled a JSON header that Clang 21 rejects under `-Werror` with `deprecated-literal-operator`. Pull the latest protocol-v2 testing branch instead of suppressing that compiler diagnostic.
 
 ## Windows
 
