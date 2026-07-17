@@ -13,7 +13,6 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.net.wifi.WifiManager
-import android.provider.Settings
 import android.util.Log
 import java.net.ServerSocket
 import kotlin.concurrent.thread
@@ -61,27 +60,7 @@ class ClipboardSyncService : Service() {
                 return@addPrimaryClipChangedListener
             }
 
-            Log.i("ClipboardSyncService", "onPrimaryClipChanged: clipboard changed in background, auto-syncing...")
-            val hasOverlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Settings.canDrawOverlays(this)
-            } else {
-                true
-            }
-
-            if (hasOverlay) {
-                try {
-                    val writeIntent = Intent(this, ClipboardWriteActivity::class.java).apply {
-                        putExtra("action", "read_and_send")
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                        action = "com.example.clipboard.READ_ACTION_" + System.currentTimeMillis()
-                    }
-                    startActivity(writeIntent)
-                } catch (e: Exception) {
-                    Log.e("ClipboardSyncService", "onPrimaryClipChanged: failed to start ClipboardWriteActivity", e)
-                }
-            } else {
-                Log.w("ClipboardSyncService", "onPrimaryClipChanged: cannot auto-sync in background without overlay permission")
-            }
+            Log.i("ClipboardSyncService", "Clipboard changed while the service was active; Android may require the explicit Sync notification action")
         }
 
         try {
@@ -172,7 +151,7 @@ class ClipboardSyncService : Service() {
                         try {
                             val reader = client.getInputStream().bufferedReader(Charsets.UTF_8)
                             val text = reader.readText()
-                            Log.i("ClipboardSyncService", "startLocalServer: read ${text.length} chars from socket: \"${if (text.length > 30) text.substring(0, 30) + "..." else text}\"")
+                            Log.i("ClipboardSyncService", "startLocalServer: read ${text.length} clipboard characters from the local socket")
                             if (text.isNotEmpty()) {
                                 if (isPaused) {
                                     Log.i("ClipboardSyncService", "startLocalServer: sync is paused, ignoring incoming text: \"$text\"")
@@ -218,7 +197,7 @@ class ClipboardSyncService : Service() {
             manager.notify(NOTIFICATION_ID, notification)
         } else if (intent != null && intent.action == ACTION_UPDATE_NOTIFICATION) {
             val text = intent.getStringExtra(EXTRA_TEXT)
-            Log.i("ClipboardSyncService", "onStartCommand: update request, text = ${if (text != null) "\"$text\"" else "null"}")
+            Log.i("ClipboardSyncService", "onStartCommand: clipboard update request received")
             if (text != null) {
                 updateNotification(text)
             }
@@ -302,14 +281,8 @@ class ClipboardSyncService : Service() {
             builder.addAction(pauseAction)
         }
 
-        // Add "Copy" action button only if syncText is not null AND overlay permission is not granted AND we are not paused
-        val hasOverlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Settings.canDrawOverlays(this)
-        } else {
-            true
-        }
-
-        if (syncText != null && !hasOverlay && !isPaused) {
+        // Android 10+ restricts background clipboard writes. Require an explicit user action.
+        if (syncText != null && !isPaused) {
             val copyIntent = Intent(this, ClipboardWriteActivity::class.java).apply {
                 putExtra("text", syncText)
                 action = "com.example.clipboard.COPY_ACTION_" + System.currentTimeMillis()
@@ -336,31 +309,8 @@ class ClipboardSyncService : Service() {
 
     private fun updateNotification(syncText: String) {
         Log.i("ClipboardSyncService", "updateNotification: syncText length = ${syncText.length}")
-        val previewText = if (syncText.length > 30) syncText.substring(0, 30) + "..." else syncText
         currentSyncText = syncText
-        currentContentText = "Synced: \"$previewText\""
-        
-        val hasOverlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Settings.canDrawOverlays(this)
-        } else {
-            true
-        }
-
-        if (hasOverlay) {
-            Log.i("ClipboardSyncService", "updateNotification: overlay permission granted, launching ClipboardWriteActivity automatically")
-            try {
-                val writeIntent = Intent(this, ClipboardWriteActivity::class.java).apply {
-                    putExtra("text", syncText)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    action = "com.example.clipboard.WRITE_ACTION_" + System.currentTimeMillis()
-                }
-                startActivity(writeIntent)
-            } catch (e: Exception) {
-                Log.e("ClipboardSyncService", "updateNotification: failed to launch ClipboardWriteActivity automatically", e)
-            }
-        } else {
-            Log.i("ClipboardSyncService", "updateNotification: overlay permission not granted, will require manual notification copy action")
-        }
+        currentContentText = "Clipboard received from a trusted peer"
 
         val notification = createNotification(currentContentText, syncText)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

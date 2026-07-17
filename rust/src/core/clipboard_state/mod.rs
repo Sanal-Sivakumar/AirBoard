@@ -1,5 +1,5 @@
-use std::sync::Mutex;
 use once_cell::sync::Lazy;
+use std::sync::Mutex;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ClipboardState {

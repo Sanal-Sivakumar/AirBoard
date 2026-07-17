@@ -54,7 +54,8 @@ class DevicesScreen extends StatelessWidget {
                   device: d, compact: c, onUnpair: () => onUnpair(d)))
               .toList()),
         const SizedBox(height: 12),
-        SectionTitle('Discovered nearby', count: c ? null : discoveredDevices.length),
+        SectionTitle('Discovered nearby',
+            count: c ? null : discoveredDevices.length),
         if (discoveredDevices.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
@@ -69,7 +70,8 @@ class DevicesScreen extends StatelessWidget {
                   DeviceTile(device: d, compact: c, onPair: () => onPair(d)))
               .toList()),
         const SizedBox(height: 12),
-        SectionTitle('Clipboard history', count: c ? null : clipboardHistory.length),
+        SectionTitle('Clipboard history',
+            count: c ? null : clipboardHistory.length),
         if (clipboardHistory.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
@@ -96,50 +98,59 @@ class DevicesScreen extends StatelessWidget {
   }
 
   Widget _statusBar(BuildContext context) {
+    final connectedCount =
+        pairedDevices.where((device) => device.online).length;
     Widget stat(String k, String v) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(k.toUpperCase(), style: AB.label),
             const SizedBox(height: 2),
-            Text(v,
-                style: AB.title.copyWith(fontSize: 19, letterSpacing: -.2)),
+            Text(v, style: AB.title.copyWith(fontSize: 19, letterSpacing: -.2)),
           ],
         );
-    Widget sep() => Container(width: 1, height: 30, color: AB.stroke);
-
     return GlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      child: Row(children: [
-        stat('Discovered', '${discoveredDevices.length}'),
-        const SizedBox(width: 24),
-        sep(),
-        const SizedBox(width: 24),
-        stat('Trusted', '${pairedDevices.length}'),
-        const SizedBox(width: 24),
-        sep(),
-        const SizedBox(width: 24),
-        stat('Last sync', lastSyncTimestamp),
-        const Spacer(),
-        _eePill(),
-      ]),
+      child: Wrap(
+          spacing: 24,
+          runSpacing: 14,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            stat('Discovered', '${discoveredDevices.length}'),
+            stat('Trusted', '${pairedDevices.length}'),
+            stat('Connected', '$connectedCount'),
+            stat('Last sync', lastSyncTimestamp),
+            _eePill(connectedCount),
+          ]),
     );
   }
 
-  Widget _eePill() => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSyncEnabled ? AB.ok.withOpacity(.10) : AB.stroke,
-          borderRadius: BorderRadius.circular(AB.rPill),
-          border: Border.all(color: isSyncEnabled ? AB.ok.withOpacity(.30) : AB.stroke),
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          PulseDot(size: 7, color: isSyncEnabled ? AB.ok : Colors.grey),
-          const SizedBox(width: 8),
-          Text(isSyncEnabled ? 'E2EE ACTIVE' : 'SYNC PAUSED',
-              style: AB.label.copyWith(color: isSyncEnabled ? AB.ok : AB.text3, letterSpacing: .6)),
-        ]),
-      );
+  Widget _eePill(int connectedCount) {
+    final secure = connectedCount > 0;
+    final color = secure
+        ? AB.ok
+        : isSyncEnabled
+            ? AB.accent
+            : AB.text3;
+    final label = secure
+        ? 'E2EE ACTIVE'
+        : isSyncEnabled
+            ? 'WAITING FOR PEER'
+            : 'SYNC PAUSED';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .10),
+        borderRadius: BorderRadius.circular(AB.rPill),
+        border: Border.all(color: color.withValues(alpha: .30)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        PulseDot(size: 7, color: color),
+        const SizedBox(width: 8),
+        Text(label, style: AB.label.copyWith(color: color, letterSpacing: .6)),
+      ]),
+    );
+  }
 
   Widget _connectRow() {
     return Padding(

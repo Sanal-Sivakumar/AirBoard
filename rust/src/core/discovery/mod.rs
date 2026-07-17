@@ -1,9 +1,9 @@
+use crate::core::connection_registry::add_or_update_peer;
+use crate::core::sync_engine::engine::SYNC_ENGINE;
+use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use tokio::net::UdpSocket;
 use tokio::time::{sleep, Duration};
-use serde::{Deserialize, Serialize};
-use crate::core::sync_engine::engine::SYNC_ENGINE;
-use crate::core::connection_registry::add_or_update_peer;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DeviceAnnouncement {
@@ -37,7 +37,8 @@ fn get_local_broadcasts_from_ip_cmd() -> Vec<std::net::IpAddr> {
     broadcasts
 }
 
-pub static DYNAMIC_LOCAL_IP: once_cell::sync::Lazy<std::sync::Mutex<Option<String>>> = once_cell::sync::Lazy::new(|| std::sync::Mutex::new(None));
+pub static DYNAMIC_LOCAL_IP: once_cell::sync::Lazy<std::sync::Mutex<Option<String>>> =
+    once_cell::sync::Lazy::new(|| std::sync::Mutex::new(None));
 
 fn get_local_ip() -> Option<std::net::IpAddr> {
     let socket = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
@@ -47,7 +48,7 @@ fn get_local_ip() -> Option<std::net::IpAddr> {
 
 fn get_broadcast_addresses() -> Vec<SocketAddr> {
     let mut addrs = vec!["255.255.255.255:45454".parse().unwrap()];
-    
+
     // 1. Check dynamic local IP set from Dart side
     let mut resolved_ip = None;
     if let Ok(guard) = DYNAMIC_LOCAL_IP.lock() {
@@ -57,7 +58,7 @@ fn get_broadcast_addresses() -> Vec<SocketAddr> {
             }
         }
     }
-    
+
     // 2. Try spawning "ip addr" command first (supported on Android/Linux)
     let parsed_broadcasts = get_local_broadcasts_from_ip_cmd();
     if !parsed_broadcasts.is_empty() {
@@ -65,30 +66,28 @@ fn get_broadcast_addresses() -> Vec<SocketAddr> {
             addrs.push(SocketAddr::new(ip, 45454));
         }
     }
-    
+
     // 3. Fallback/Supplement with connectionless UDP routing resolver
     let local_ip = resolved_ip.or_else(get_local_ip);
-    if let Some(ip) = local_ip {
-        if let std::net::IpAddr::V4(ipv4) = ip {
-            let octets = ipv4.octets();
-            if !ipv4.is_loopback() && !ipv4.is_unspecified() {
-                // Add standard /24 subnet broadcast
-                let b24 = std::net::Ipv4Addr::new(octets[0], octets[1], octets[2], 255);
-                addrs.push(SocketAddr::new(std::net::IpAddr::V4(b24), 45454));
+    if let Some(std::net::IpAddr::V4(ipv4)) = local_ip {
+        let octets = ipv4.octets();
+        if !ipv4.is_loopback() && !ipv4.is_unspecified() {
+            // Add standard /24 subnet broadcast
+            let b24 = std::net::Ipv4Addr::new(octets[0], octets[1], octets[2], 255);
+            addrs.push(SocketAddr::new(std::net::IpAddr::V4(b24), 45454));
 
-                // Add standard /16 subnet broadcast
-                let b16 = std::net::Ipv4Addr::new(octets[0], octets[1], 255, 255);
-                addrs.push(SocketAddr::new(std::net::IpAddr::V4(b16), 45454));
+            // Add standard /16 subnet broadcast
+            let b16 = std::net::Ipv4Addr::new(octets[0], octets[1], 255, 255);
+            addrs.push(SocketAddr::new(std::net::IpAddr::V4(b16), 45454));
 
-                // Special handling for iOS/iPadOS hotspot subnet: 172.20.10.0/28
-                if octets[0] == 172 && octets[1] == 20 && octets[2] == 10 {
-                    let ios_hotspot = std::net::Ipv4Addr::new(172, 20, 10, 15);
-                    addrs.push(SocketAddr::new(std::net::IpAddr::V4(ios_hotspot), 45454));
-                }
+            // Special handling for iOS/iPadOS hotspot subnet: 172.20.10.0/28
+            if octets[0] == 172 && octets[1] == 20 && octets[2] == 10 {
+                let ios_hotspot = std::net::Ipv4Addr::new(172, 20, 10, 15);
+                addrs.push(SocketAddr::new(std::net::IpAddr::V4(ios_hotspot), 45454));
             }
         }
     }
-    
+
     addrs.sort();
     addrs.dedup();
     addrs

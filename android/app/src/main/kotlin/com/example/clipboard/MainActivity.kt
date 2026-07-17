@@ -44,24 +44,6 @@ class MainActivity : FlutterActivity() {
                     }
                     result.success(null)
                 }
-                "checkOverlayPermission" -> {
-                    val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        Settings.canDrawOverlays(this)
-                    } else {
-                        true
-                    }
-                    result.success(hasPermission)
-                }
-                "requestOverlayPermission" -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        val intent = Intent(
-                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            Uri.parse("package:$packageName")
-                        )
-                        startActivity(intent)
-                    }
-                    result.success(null)
-                }
                 "checkBatteryOptimization" -> {
                     val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
                     val isIgnoring = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

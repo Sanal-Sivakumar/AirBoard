@@ -1,7 +1,7 @@
-use tokio::time::{sleep, Duration};
-use crate::core::peer_manager::{send_heartbeats, ACTIVE_PEERS};
 use crate::core::connection_registry::{prune_inactive_peers, update_connection_status};
+use crate::core::peer_manager::{send_heartbeats, ACTIVE_PEERS};
 use crate::core::sync_engine::engine::{emit_event, SyncEvent};
+use tokio::time::{sleep, Duration};
 
 pub async fn start_heartbeat_loop() {
     loop {

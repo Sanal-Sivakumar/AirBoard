@@ -19,6 +19,7 @@ dependencies:
     path: rust_builder
   flutter_svg: ^2.1.0
   google_fonts: ^8.1.0
+  path_provider: ^2.1.5
 
 
 dev_dependencies:
@@ -44,5 +45,4 @@ flutter_launcher_icons:
     image_path: "assets/logo.png"
     icon_size: 256
   image_path: "assets/logo.png"
-
 

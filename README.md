@@ -1,115 +1,162 @@
-# AirBoard - Decentralized Cross-Platform P2P Clipboard Sync
+# AirBoard
 
-AirBoard is a free, open-source, zero-trust, serverless peer-to-peer (P2P) clipboard synchronization system. It securely shares clipboard data across Android, iOS, iPadOS, macOS, Linux, and Windows devices on your local network (LAN) in less than 50 milliseconds.
+AirBoard is a local-network, peer-to-peer text clipboard synchronizer for Linux, Windows, macOS, Android, iOS, and iPadOS. Devices communicate directly over the LAN; there is no AirBoard cloud service, account, analytics endpoint, or clipboard database.
 
-Unlike cloud-dependent alternatives that upload your sensitive data to third-party databases, AirBoard operates entirely locally. Your copy-paste streams are encrypted end-to-end and transmitted directly between your paired devices.
+The current source implements protocol v2. Clipboard payloads are sent only after mutual pairing approval and an authenticated ephemeral-key handshake.
 
----
+> **Release notice:** binaries already present in `releases/` and older GitHub Pages downloads predate protocol v2. They are not compatible with or security-equivalent to the current source. Rebuild every participating device from this revision and pair again. Do not mix legacy and v2 clients.
 
-## 📥 Direct Download Links
+## What is implemented
 
-You can download the pre-compiled beta binaries directly from the links below:
-*   🤖 **Android (APK)**: [airboard-android.apk](https://Sanal-Sivakumar.github.io/AirBoard/releases/airboard-android.apk)
-*   🐧 **Linux (ZIP)**: [airboard-linux.zip](https://Sanal-Sivakumar.github.io/AirBoard/releases/airboard-linux.zip)
-*   🍎 **macOS (ZIP)**: [airboard-macos.zip](https://Sanal-Sivakumar.github.io/AirBoard/releases/airboard-macos.zip)
-*   ❖ **Windows (ZIP)**: [airboard-windows.zip](https://Sanal-Sivakumar.github.io/AirBoard/releases/airboard-windows.zip)
-*   📱 **iOS & iPadOS (IPA)**: [AirBoard-ipadosios.ipa](https://Sanal-Sivakumar.github.io/AirBoard/releases/AirBoard-ipadosios.ipa)
+- UDP discovery on port `45454`, plus manual IP connection when broadcast discovery is blocked.
+- Direct WebSocket connections on TCP port `45455`.
+- Ed25519 device identity keys stored through `flutter_secure_storage`.
+- Full SHA-256 identity fingerprints shown for manual verification.
+- Signed pairing requests and responses proving possession of the advertised identity keys.
+- Mutual fingerprint approval: both the requester and responder must approve the other device.
+- Fresh ephemeral X25519 keys for every connected session.
+- Transcript-bound HKDF-SHA-256 session-key derivation.
+- ChaCha20-Poly1305 authenticated encryption for clipboard data and heartbeats.
+- Authenticated protocol version, sender, recipient, and sequence number on every encrypted envelope.
+- A 1,024-message replay window and a 4,096-packet mesh deduplication cache.
+- 512 KiB clipboard and 1 MiB wire-message limits.
+- Atomic trust-store writes with owner-only permissions on Unix systems.
+- Clipboard monitoring on Linux, Windows, and macOS while AirBoard is running.
+- Android foreground networking with explicit notification actions when the OS blocks background clipboard access.
+- Foreground clipboard synchronization and lifecycle-safe reconnection on iOS/iPadOS.
 
----
+## Platform behavior
 
-## 📖 Deep-Dive Reference Manuals
-To learn more about the engineering details of this project, check out these dedicated files:
-*   **[Technical Reference Guide](TECHNICAL_DETAILS.md)**: A textbook-style guide to AirBoard's P2P networking topology, UDP broadcasts, X25519/Ed25519 cryptography, and Dart-to-Rust memory bindings.
-*   **[Troubleshooting & Resolution Log](TROUBLESHOOTING.md)**: A chronological story detailing OS constraints (Android background limits, iOS doze execution), network isolation, and thread-panics solved during development.
+| Platform | Clipboard behavior | Background behavior |
+| --- | --- | --- |
+| Linux | Automatic text read/write while AirBoard runs | Continues while the process is running |
+| Windows | Automatic text read/write while AirBoard runs | Continues while the process is running |
+| macOS | Automatic text read/write while AirBoard runs | Continues while the app is running; sandbox network client/server entitlements are included |
+| Android | Automatic while the app is foregrounded | Network service remains available. Android 10+ may require tapping **Sync** to send or **Copy** to apply clipboard text. AirBoard does not request overlay permission. |
+| iOS/iPadOS | Automatic while AirBoard is foregrounded | Connections pause when suspended and reconnect on foreground. Continuous background clipboard access is not claimed because iOS does not permit it for this app category. |
 
----
+AirBoard currently synchronizes text only. Older documents that mentioned image synchronization described planned work, not the active protocol.
 
-## 🌐 Product Showcase Website
+## Security model
 
-The product showcase website is live and hosted on GitHub Pages:
-*   **Live Web Address**: [https://sanal-sivakumar.github.io/AirBoard/](https://sanal-sivakumar.github.io/AirBoard/)
+AirBoard is designed to protect clipboard plaintext from passive LAN observers and active network attackers after users verify pairing fingerprints correctly.
 
-*(Alternatively, you can run it locally from the [web_showcase/](web_showcase) directory using `python3 -m http.server 8080 --directory web_showcase` at http://localhost:8080)*
+It does not protect against:
 
----
+- a compromised or malicious paired device;
+- malware, accessibility services, clipboard managers, or screenshots on an endpoint;
+- a user approving a fingerprint without comparing it on the other device;
+- traffic analysis such as observing that two IP addresses communicate;
+- operating-system backups or compromise of the platform credential store.
 
-## 🛠️ Technology Stack
-*   **Cross-Platform UI**: Flutter (Dart SDK >= 3.3.0) with an adaptive, glassmorphic layout.
-*   **System Core Engine**: Rust (Edition 2021) for multi-threaded socket operations, file systems, and timers.
-*   **Interoperability**: `flutter_rust_bridge` (v2.12.0) for zero-copy memory translation between Dart and Rust.
-*   **End-to-End Encryption (E2EE)**: `ed25519-dalek` (device signing keys), `x25519-dalek` (Diffie-Hellman ephemeral handshakes), and `chacha20poly1305` (symmetric payload encryption).
-*   **Key Storage**: System Keystore/Keyring integrations via `flutter_secure_storage`.
-*   **Discovery Protocol**: UDP sockets on port `45455`.
-*   **Synchronization Link**: TCP sockets on port `45457`.
+The UI says **E2EE active** only while at least one authenticated peer is connected. Merely enabling synchronization is shown as a waiting state.
 
----
+See [TECHNICAL_DETAILS.md](TECHNICAL_DETAILS.md) for the protocol and threat model and [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for platform-specific recovery steps.
 
-## 🚀 Building & Running Client Builds
+## Pairing
 
-### Prerequisites
-For Linux host environments, install the standard compilation headers:
+1. Put both devices on the same trusted LAN and enable synchronization.
+2. Select the discovered peer, or enter its IP address manually.
+3. The receiving device verifies the signed request and displays the requester's full fingerprint.
+4. Compare that fingerprint with the requester device and approve only if every group matches.
+5. The requester then verifies the signed response and displays the responder's fingerprint.
+6. Compare it with the responder device and approve.
+7. AirBoard stores the peer's public identity and starts an encrypted session.
+
+Pairing prompts expire after two minutes. Protocol v1 trust records should be removed and paired again after upgrading.
+
+## Development setup
+
+Requirements:
+
+- Flutter compatible with Dart `>=3.3.0 <4.0.0`
+- Rust stable
+- Platform build tools for the target OS
+- Android: JDK 17, Android SDK, NDK `25.1.8937393`
+- Apple targets: a complete Xcode installation and CocoaPods
+
+Install dependencies:
+
 ```bash
-sudo apt-get update
-sudo apt-get install -y build-essential pkg-config libx11-dev libxcb1-dev
+flutter pub get
+cargo check --manifest-path rust/Cargo.toml
 ```
 
-Configure Rust Android targets for compilation:
-```bash
-rustup target add aarch64-linux-android
-rustup target add x86_64-linux-android
-```
+Regenerate bridge bindings after changing an exported Rust API:
 
-Perform the bridge code generation:
 ```bash
 flutter_rust_bridge_codegen generate
 ```
 
-### 1. Linux Desktop
-Run the client directly:
+The current hardening work retained existing exported signatures, so the checked-in bindings remain valid.
+
+## Verification
+
+Run the checks used by this repository:
+
 ```bash
-flutter run -d linux
-```
-To build the release zip:
-```bash
-flutter build linux --release
+flutter analyze
+flutter test
+cargo test --manifest-path rust/Cargo.toml
 ```
 
-### 2. Android (Phones & Tablets)
-Run the application on an active device/emulator:
+The Rust suite covers authenticated-encryption tampering, associated-data binding, transcript-bound key derivation, malformed fixed-length fields, replay rejection, sequence allocation, handshake transcript identity binding, and clipboard deduplication.
+
+Platform builds:
+
 ```bash
-flutter run -d android
+flutter build linux --release
+flutter build windows --release
+flutter build macos --release
+flutter build apk --debug
+flutter build ipa --release --no-codesign
 ```
-To compile the standalone release APK:
+
+### Android release signing
+
+Release builds are deliberately blocked unless `android/key.properties` points to a private release keystore. AirBoard no longer falls back to the Android debug signing key.
+
+Example local file, which is ignored by Git:
+
+```properties
+storeFile=/absolute/path/to/airboard-release.jks
+storePassword=replace-me
+keyAlias=airboard
+keyPassword=replace-me
+```
+
+Then run:
+
 ```bash
 flutter build apk --release
 ```
-*The output binary will be generated at `build/app/outputs/flutter-apk/app-release.apk`.*
 
-### 3. iPadOS & iOS
-Due to Apple compiler constraints, building for iPadOS requires a **macOS** computer with **Xcode** installed:
-```bash
-flutter build ipa --release --no-codesign
-```
-*The output `.ipa` package will be located under `build/ios/ipa/`.*
-*   To install on an iPad, refer to the **iPad Sideloading Guide** on our website or inside the [sideload instructions section](web_showcase/index.html#sideload-guide).
+Never commit the keystore or `key.properties`.
 
-### 4. Windows Desktop
-Building for Windows requires a **Windows** host machine with **Visual Studio (C++ Desktop development)** and the **Rust (MSVC)** toolchain installed:
-```cmd
-flutter build windows --release
-```
-*The compiled binary files will be generated inside `build/windows/x64/runner/Release/`.*
+## Network ports
 
-### 5. macOS Desktop
-Building for macOS requires a **macOS** host machine with **Xcode** and the **Rust** toolchain installed:
-```bash
-flutter build macos --release
-```
-*The compiled app bundle (`AirBoard.app` or `clipboard.app`) will be generated inside `build/macos/Build/Products/Release/`.*
+| Port | Scope | Purpose |
+| --- | --- | --- |
+| UDP `45454` | LAN | Device announcements and discovery |
+| TCP `45455` | LAN | Pairing, authenticated handshake, encrypted peer traffic |
+| TCP `45456` | Android loopback only | Rust-to-Kotlin incoming clipboard notification bridge |
+| TCP `45457` | Android loopback only | Kotlin-to-Rust explicit clipboard-send bridge |
 
----
+Only `45454` and `45455` should be allowed through a LAN firewall. Never expose the peer port directly to the public internet.
 
-## 🤝 Support & Contributions
-AirBoard is open-source and welcoming to community contributions:
-*   **Official Repository**: [https://github.com/Sanal-Sivakumar/AirBoard](https://github.com/Sanal-Sivakumar/AirBoard)
-*   **Developer Contact**: [sanalsiva2005@gmail.com](mailto:sanalsiva2005@gmail.com)
+## Repository layout
+
+- `lib/` — Flutter application, pairing UI, settings, device and clipboard views.
+- `rust/src/core/` — active discovery, pairing, cryptography, session, peer, lifecycle and clipboard code.
+- `android/`, `ios/`, `macos/`, `linux/`, `windows/` — native platform runners.
+- `test/` and `integration_test/` — UI and bridge tests.
+- `web_showcase/` — static product website; it is not a clipboard client.
+- `releases/` — legacy artifacts awaiting protocol-v2 rebuilds.
+
+## Current verification boundary
+
+The source passes Rust checks/tests and Flutter analysis/widget tests in the current development environment. Apple compilation still requires a complete local Xcode installation. Android compilation additionally requires enough disk space to install the configured NDK. These environment requirements are documented rather than reported as successful builds when they were not executed.
+
+## License
+
+See [LICENSE](LICENSE).

@@ -1,10 +1,10 @@
-use std::sync::Mutex;
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::{Read, Write};
-use std::path::PathBuf;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs::{self, File, OpenOptions};
+use std::io::{Read, Write};
+use std::path::PathBuf;
+use std::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TrustedDevice {
@@ -19,21 +19,23 @@ pub struct TrustedDevice {
     pub last_port: Option<u16>,
 }
 
-pub static TRUST_STORE: Lazy<Mutex<HashMap<String, TrustedDevice>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+pub static TRUST_STORE: Lazy<Mutex<HashMap<String, TrustedDevice>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
 pub static DB_PATH: Lazy<Mutex<Option<PathBuf>>> = Lazy::new(|| Mutex::new(None));
 
 pub fn init_trust_store(storage_dir: String) {
     let mut path = PathBuf::from(storage_dir);
     path.push("trust_store.json");
-    
+
     let mut db_guard = DB_PATH.lock().unwrap();
     *db_guard = Some(path.clone());
-    
+
     if path.exists() {
         if let Ok(mut file) = File::open(&path) {
             let mut content = String::new();
             if file.read_to_string(&mut content).is_ok() {
-                if let Ok(loaded) = serde_json::from_str::<HashMap<String, TrustedDevice>>(&content) {
+                if let Ok(loaded) = serde_json::from_str::<HashMap<String, TrustedDevice>>(&content)
+                {
                     let mut store = TRUST_STORE.lock().unwrap();
                     *store = loaded;
                 }
@@ -46,9 +48,24 @@ pub fn save_trust_store() {
     let path_guard = DB_PATH.lock().unwrap();
     if let Some(ref path) = *path_guard {
         let store = TRUST_STORE.lock().unwrap();
-        if let Ok(json_str) = serde_json::to_string(&*store) {
-            if let Ok(mut file) = File::create(path) {
-                let _ = file.write_all(json_str.as_bytes());
+        if let Ok(json_str) = serde_json::to_string_pretty(&*store) {
+            let temp_path = path.with_extension("json.tmp");
+            let mut options = OpenOptions::new();
+            options.write(true).create(true).truncate(true);
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::OpenOptionsExt;
+                options.mode(0o600);
+            }
+            if let Ok(mut file) = options.open(&temp_path) {
+                if file.write_all(json_str.as_bytes()).is_ok() && file.sync_all().is_ok() {
+                    if fs::rename(&temp_path, path).is_err() {
+                        let _ = fs::copy(&temp_path, path);
+                        let _ = fs::remove_file(&temp_path);
+                    }
+                } else {
+                    let _ = fs::remove_file(&temp_path);
+                }
             }
         }
     }
