@@ -49,7 +49,7 @@ class _GlassCardState extends State<GlassCard> {
         borderRadius: br,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.45),
+            color: Colors.black.withValues(alpha: .45),
             blurRadius: 44,
             spreadRadius: -18,
             offset: const Offset(0, 18),
@@ -57,9 +57,7 @@ class _GlassCardState extends State<GlassCard> {
           if (widget.flash)
             BoxShadow(color: AB.glow, blurRadius: 26, spreadRadius: -2),
         ],
-        border: widget.flash
-            ? Border.all(color: AB.accent, width: 1.4)
-            : null,
+        border: widget.flash ? Border.all(color: AB.accent, width: 1.4) : null,
       ),
       child: ClipRRect(
         borderRadius: br,
@@ -75,12 +73,12 @@ class _GlassCardState extends State<GlassCard> {
                 end: Alignment.bottomRight,
                 stops: const [0.0, 0.38],
                 colors: [
-                  Colors.white.withOpacity(.10),
+                  Colors.white.withValues(alpha: .10),
                   widget.fill ?? (lifted ? AB.glassHi : AB.glass),
                 ],
               ),
-              border: Border.all(
-                  color: lifted ? AB.strokeHi : AB.stroke, width: 1),
+              border:
+                  Border.all(color: lifted ? AB.strokeHi : AB.stroke, width: 1),
             ),
             child: widget.child,
           ),
@@ -90,9 +88,8 @@ class _GlassCardState extends State<GlassCard> {
 
     if (widget.onTap != null || widget.hoverLift) {
       card = MouseRegion(
-        cursor: widget.onTap != null
-            ? SystemMouseCursors.click
-            : MouseCursor.defer,
+        cursor:
+            widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
         onEnter: (_) => setState(() => _hover = true),
         onExit: (_) => setState(() => _hover = false),
         child: GestureDetector(onTap: widget.onTap, child: card),
@@ -159,9 +156,9 @@ class _AmbientBackgroundState extends State<AmbientBackground>
           shape: BoxShape.circle,
           gradient: RadialGradient(
             colors: [
-              c.withOpacity(op),
-              c.withOpacity(op * 0.4),
-              c.withOpacity(0.0),
+              c.withValues(alpha: op),
+              c.withValues(alpha: op * 0.4),
+              c.withValues(alpha: 0.0),
             ],
             stops: const [0.0, 0.45, 1.0],
           ),
@@ -209,7 +206,7 @@ class _PulseDotState extends State<PulseDot>
                 height: widget.size * (1 + v * 1.8),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: widget.color.withOpacity((1 - v) * .45),
+                  color: widget.color.withValues(alpha: (1 - v) * .45),
                 ),
               ),
               Container(
@@ -259,7 +256,7 @@ class GlassToggle extends StatelessWidget {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                    color: Colors.black.withOpacity(.4), blurRadius: 6)
+                    color: Colors.black.withValues(alpha: .4), blurRadius: 6)
               ],
             ),
           ),

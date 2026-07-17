@@ -24,7 +24,7 @@ Future<bool> showPairingSheet(
 
   final result = await showDialog<bool>(
     context: context,
-    barrierColor: Colors.black.withOpacity(.55),
+    barrierColor: Colors.black.withValues(alpha: .55),
     barrierDismissible: false,
     builder: (context) => Material(
       color: Colors.transparent,
@@ -45,15 +45,17 @@ Future<bool> showPairingSheet(
                       width: 42,
                       height: 42,
                       decoration: BoxDecoration(
-                        color: AB.warn.withOpacity(.14),
+                        color: AB.warn.withValues(alpha: .14),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AB.warn.withOpacity(.3)),
+                        border:
+                            Border.all(color: AB.warn.withValues(alpha: .3)),
                       ),
                       child: const Icon(Icons.warning_amber_rounded,
                           color: AB.warn, size: 22),
                     ),
                     const SizedBox(width: 12),
-                    Text('Pairing Request', style: AB.h1.copyWith(fontSize: 18)),
+                    Text('Pairing Request',
+                        style: AB.h1.copyWith(fontSize: 18)),
                   ]),
                   const SizedBox(height: 8),
                   Text('A device wants to pair securely with you:',
@@ -80,8 +82,14 @@ Future<bool> showPairingSheet(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(deviceName.isEmpty ? "Unknown Peer" : deviceName, style: AB.title, overflow: TextOverflow.ellipsis),
-                            Text('ID: ${deviceId.substring(0, min(deviceId.length, 12))}...',
+                            Text(
+                                deviceName.isEmpty
+                                    ? "Unknown Peer"
+                                    : deviceName,
+                                style: AB.title,
+                                overflow: TextOverflow.ellipsis),
+                            Text(
+                                'ID: ${deviceId.substring(0, min(deviceId.length, 12))}...',
                                 style: AB.monoSm.copyWith(color: AB.text3)),
                           ],
                         ),
@@ -105,18 +113,20 @@ Future<bool> showPairingSheet(
                       children: fingerprint
                           .map((b) => Text(b,
                               style: AB.mono.copyWith(
-                                  color: AB.warn, letterSpacing: .5, fontSize: 13)))
+                                  color: AB.warn,
+                                  letterSpacing: .5,
+                                  fontSize: 13)))
                           .toList(),
                     ),
                   ),
                   const SizedBox(height: 14),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 13, vertical: 11),
                     decoration: BoxDecoration(
-                      color: AB.warn.withOpacity(.08),
+                      color: AB.warn.withValues(alpha: .08),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AB.warn.withOpacity(.25)),
+                      border: Border.all(color: AB.warn.withValues(alpha: .25)),
                     ),
                     child: Row(children: [
                       const Icon(Icons.shield_outlined,
@@ -125,8 +135,8 @@ Future<bool> showPairingSheet(
                       Expanded(
                         child: Text(
                             'Only approve if the fingerprints are identical on both devices.',
-                            style: AB.sub
-                                .copyWith(color: AB.warn, fontSize: 12)),
+                            style:
+                                AB.sub.copyWith(color: AB.warn, fontSize: 12)),
                       ),
                     ]),
                   ),
@@ -176,7 +186,12 @@ class _SheetButton extends StatelessWidget {
           border: ghost ? Border.all(color: AB.stroke) : null,
           boxShadow: ghost
               ? null
-              : [BoxShadow(color: AB.ok.withOpacity(.4), blurRadius: 18, spreadRadius: -6)],
+              : [
+                  BoxShadow(
+                      color: AB.ok.withValues(alpha: .4),
+                      blurRadius: 18,
+                      spreadRadius: -6)
+                ],
         ),
         child: Text(label,
             style: AB.body.copyWith(

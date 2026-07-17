@@ -1,130 +1,195 @@
-# AirBoard: Troubleshooting & Development History Log
+# AirBoard Troubleshooting
 
-This document chronicles the step-by-step evolution of AirBoard from a simple client-server prototype to a secure, decentralized cross-platform clipboard synchronization network. It details the technical challenges, OS constraints, network limitations, and system-level panics encountered in each phase, along with the engineering solutions developed to solve them.
+This guide applies to protocol v2 in the current source tree. Older binaries in `releases/` and legacy website downloads use an earlier protocol and must not be mixed with current builds.
 
----
+The website's Windows protocol-v2 package and the GitHub Actions iPadOS/iOS artifact are testing builds. Follow [TESTING.md](TESTING.md) and use non-sensitive sample clipboard data until cross-device validation is complete.
 
-## 🗺️ Chronological Development Journey
+## Start here
 
+Run these checks from the repository root:
+
+```bash
+flutter doctor -v
+flutter pub get
+flutter analyze
+flutter test
+cargo test --manifest-path rust/Cargo.toml
 ```
-  Phase 1-2            Phases 3-4          Phases 5-7          Phases 8-10         Phases 11-15
-  Client-Server  ===>  E2EE Security ===>  Background    ===>  Hotspot Sync  ===>  Aurora UI,
-  to P2P Mesh          Pairing Keys        Loopbacks & BAL     & Audio Loops       Images & History
+
+All participating devices must be built from the same protocol-v2 revision. After upgrading from an older build, remove the old trusted-device entry and pair again.
+
+## Devices do not appear
+
+AirBoard discovery uses UDP port `45454`. Peer and pairing traffic uses TCP port `45455`.
+
+Check that:
+
+- both devices are on the same LAN or hotspot;
+- synchronization is enabled on both devices;
+- the operating-system firewall allows AirBoard on private/local networks;
+- UDP `45454` and TCP `45455` are not blocked;
+- a VPN is not routing or filtering local traffic;
+- the router does not have AP/client isolation enabled.
+
+If discovery is blocked but direct LAN traffic works, enter the peer's LAN IP manually. Manual pairing still uses TCP `45455`; ports `45456` and `45457` are Android loopback bridges and are not manual-pairing ports.
+
+Synchronization must be running on both devices. The Devices screen accepts an IPv4 address with an optional port and enables synchronization automatically when **Connect** is pressed. iPadOS/iOS is client-only, so initiate pairing from the iPad using the Linux, Windows, or Android device's LAN IP.
+
+Useful checks:
+
+```bash
+# macOS/Linux: replace PEER_IP
+nc -vz PEER_IP 45455
+
+# Linux firewall examples
+sudo ufw allow 45454/udp
+sudo ufw allow 45455/tcp
 ```
 
----
+Do not port-forward TCP `45455` to the public internet.
 
-## 🛠️ Phase 1 & 2: Client-Server to P2P Mesh Sync
+## Pairing fails or times out
 
-The project began as a basic Client-Server prototype: an Android host running a WebSocket server, and a Linux client connecting to it. We soon migrated this to a serverless Peer-to-Peer (P2P) architecture where every device ran a WebSocket server, a UDP announcement loop, and client connection routines.
+Pairing requires user approval on both devices. Each prompt displays the full SHA-256 fingerprint of the other device.
 
-### Challenge 1.1: The Echo Loop (Feedback Storm)
-*   **Symptom**: Copying text on Device A successfully updated Device B. However, writing the text to B's system pasteboard triggered B's native clipboard listener, which interpreted it as a new copy, sent it back to A, and caused an infinite broadcast loop that crashed both client sockets.
-*   **Root Cause**: Native operating system clipboard managers do not expose the identity of the process writing the text. Programmatic writes (updates) and user copies look identical to system listeners.
-*   **Resolution**: We developed a local **Deduplication Engine** (`sync_engine/engine.rs`):
-    1. The sync engine computes the SHA-256 hash of any incoming clipboard update before writing it to the system pasteboard.
-    2. This hash is cached in a thread-safe `last_received_hash` register.
-    3. The native clipboard listener checks any new clip changes against this register. If the hash matches, the change is ignored as a self-triggered update.
+- Compare every fingerprint group using the other device's screen or a separate trusted channel.
+- Reject a fingerprint that differs, even by one group.
+- Complete each prompt within two minutes.
+- Keep both apps open during pairing, especially on iOS/iPadOS.
+- Verify both devices run protocol v2.
 
-### Challenge 1.2: AP Isolation & Blocked UDP Broadcasts
-*   **Symptom**: Auto-discovery failed when devices connected to public networks, university Wi-Fi, or enterprise routers.
-*   **Root Cause**: For security and to reduce local network clutter, many routers implement **AP Client Isolation** or block **UDP Multicast / Broadcast** packets on the default discovery port (`45454`/`45455`).
-*   **Resolution**: We implemented a manual connection bridge:
-    1. The app settings pane queries local network interfaces to resolve and display the host's current local IP address.
-    2. We added a manual IP address entry field in the UI.
-    3. Entering a peer's IP directly opens a TCP unicast connection to port `45457`, completely bypassing the blocked UDP multicast layer.
+The initial TCP connection times out after 15 seconds. Pairing responses larger than 64 KiB are rejected by the requester, while the shared server applies its 1 MiB WebSocket limit. If a previously trusted device changed or reinstalled its identity keys, remove it and pair again; AirBoard intentionally does not silently accept key rotation.
 
-### Challenge 1.3: Symmetric Peer Connection Race Conditions
-*   **Symptom**: When A and B discovered each other simultaneously, they both attempted client connection tasks. This created two concurrent connections between the same pair of devices, causing duplicate packet syncing and thread contention.
-*   **Root Cause**: In a decentralized P2P network, there is no coordinator server to manage who initiates a stream.
-*   **Resolution**: We implemented a **Lexicographical Tie-Breaking Algorithm**:
-    1. Every device generates a permanent, unique UUID (`device_id`) on startup.
-    2. When A and B discover each other, they compare their `device_id` strings alphabetically.
-    3. The device with the **alphabetically smaller** ID acts as the client initiator (initiating the WebSocket connection).
-    4. The device with the **alphabetically larger** ID only listens for the incoming connection.
-    5. This guarantees that exactly one stable TCP session is established between any two peers.
+## Connected, but clipboard text does not move
 
----
+AirBoard currently synchronizes UTF-8 text only. Images, files, rich text, and passwords withheld by an operating system or password manager are not supported.
 
-## 🔒 Phases 3 & 4: Secure Pairing & iPadOS Support
+Check that:
 
-As the mesh was established, security and iPadOS platform compatibility became the primary goals.
+- at least one authenticated peer is shown as connected;
+- the status says **E2EE active**, not **Waiting for peer** or **Paused**;
+- the text is at most 512 KiB;
+- synchronization is enabled;
+- both devices remain on the same network after pairing;
+- the clipboard manager or password manager is not marking the value as private.
 
-### Challenge 3.1: Ephemeral Diffie-Hellman MITM Vulnerabilities
-*   **Symptom**: While Diffie-Hellman exchanges allow two devices to agree on an encrypted session key over an insecure network, the key exchange alone is vulnerable to interceptors.
-*   **Root Cause**: The raw key exchange has no built-in identity authentication. A malicious device on the Wi-Fi could intercept the public keys and establish separate encrypted sessions with both peers (Man-in-the-Middle).
-*   **Resolution**: We implemented a **Zero-Trust Station-to-Station (STS) Protocol**:
-    1. Every device maintains permanent Ed25519 (signing) and X25519 (DH) identity keypairs stored in secure hardware via `flutter_secure_storage`.
-    2. During initial pairing, devices exchange public keys and generate a SHA-256 fingerprint.
-    3. The user manually verifies this 16-byte hex fingerprint on both screens before approving the pairing, saving the peer's public key to a local `trust_store.json`.
-    4. During session handshakes, peers sign their ephemeral DH keys using their private Ed25519 keys. The recipient verifies this signature using the stored public key from `trust_store.json`, validating the identity of the device.
-    5. Payloads are encrypted using **ChaCha20-Poly1305** authenticated symmetric encryption, featuring random 96-bit nonces to prevent packet replay attacks.
+If a device changed IP address, allow discovery/reconnection a few seconds or reconnect using its new IP. AirBoard exchanges last-writer state after reconnection, but equal or misleading device-clock timestamps can prevent conflict recovery. Copy the desired value again to create a new update.
 
-### Challenge 4.1: iOS Background Suspensions
-*   **Symptom**: When the iPadOS app was minimized, all active connections closed instantly.
-*   **Root Cause**: Apple's operating system suspends or kills background sockets and threads within 10–30 seconds to conserve battery and memory.
-*   **Resolution**:
-    1. We restricted the iPadOS platform to run strictly as a client-only peer (avoiding background server bindings).
-    2. We implemented lifecycle observers that suspend discovery and close active connections cleanly when backgrounded, then immediately trigger reconnection loops (`trigger_reconnect()`) when brought back to the foreground.
+## Duplicate updates or reconnect loops
 
----
+Protocol v2 has packet-ID deduplication, authenticated session sequence numbers, replay rejection, and deterministic connection initiation. If duplicate updates persist:
 
-## ⚡ Phases 5 - 7: Tokio Runtime Panics & Android Background Sync
+1. Confirm every device is on protocol v2.
+2. Stop all older AirBoard processes or services.
+3. Disable and re-enable synchronization.
+4. Remove stale trust records and pair again.
 
-Deploying the code in release environments exposed async thread conflicts and background clipboard restrictions on Android 10+.
+Do not run a legacy binary and a source build simultaneously on the same machine.
 
-### Challenge 5.1: Tokio Reactor Panic
-*   **Symptom**: Minimizing and reopening the app on Android or Linux caused the application to crash with a `PanicException`: `"no reactor running; tokio::spawn must be called from the context of a Tokio 1.x runtime"`.
-*   **Root Cause**: Dart-to-Rust calls (like triggering reconnections) execute on external threads managed by the Dart VM. Calling `tokio::spawn` from these foreign OS threads failed because they lacked access to the static Tokio event loop running inside the Rust environment.
-*   **Resolution**: We bound task spawning directly to our custom globally initialized static runtime pointer (`crate::api::RUNTIME`):
-    ```rust
-    crate::api::RUNTIME.spawn(async move { ... });
-    ```
+## Android
 
-### Challenge 5.2: Android 10+ Background Clipboard Blocks
-*   **Symptom**: The Android background service remained connected to the network, but incoming clipboard updates could not be written to the system clipboard when the app was minimized.
-*   **Root Cause**: Starting with Android 10, Google restricts background applications from reading/writing to the system pasteboard for user privacy.
-*   **Resolution**:
-    1. **Direct TCP Loopback (`127.0.0.1:45457`)**: The background Rust core runs a local TCP server on localhost.
-    2. **Background Activities**: When Android is minimized, incoming clipboard packets from the network are received by Rust and sent over localhost to the Kotlin foreground service (`ClipboardSyncService`).
-    3. **Overlay & Focus Grabbing**: Kotlin checks for "Display over other apps" (Overlay/`SYSTEM_ALERT_WINDOW`) permission. If active, it launches an invisible, transparent activity (`ClipboardWriteActivity`) that briefly takes window focus in the background, writes the synced text to the clipboard manager, and terminates instantly.
-    4. **Manual Notification Action Fallback**: If overlay permission is disabled, the app falls back to updating the persistent notification with a **"Copy"** button that manually invokes the transparent activity to write the text when clicked.
+### Background clipboard limitations
 
----
+Android 10 and newer restrict clipboard access for background apps. AirBoard does not request overlay permission and does not open transparent activities to bypass that policy.
 
-## 📡 Phases 8 - 10: Host Hotspots, Audio Loops & Connection Persistence
+- Keep AirBoard foregrounded for automatic read/write behavior.
+- When backgrounded, tap **Sync** in the foreground-service notification to read and send the current clipboard.
+- Tap **Copy** on an incoming notification to explicitly place received text on the clipboard.
 
-To enable iPad-to-Android direct syncing under mobile hotspot scenarios, we had to address network broadcast locks.
+Notification text does not reveal clipboard contents.
 
-### Challenge 8.1: Mobile Hotspot Discovery Isolation
-*   **Symptom**: An iPad and an Android device connected directly via a mobile hotspot could not discover each other, as discovery packets were dropped.
-*   **Root Cause**: Mobile operating systems shut down Wi-Fi multicast and broadcast capabilities during lock screens and sleep cycles to extend battery. Additionally, hotspot interfaces route packets differently than home Wi-Fi networks.
-*   **Resolution**:
-    1. **Android Multicast Lock**: We added `CHANGE_WIFI_MULTICAST_STATE` to the Android Manifest. The Kotlin service acquires a native `WifiManager.MulticastLock` on startup, forcing the Wi-Fi hardware to remain open to UDP announcements.
-    2. **iOS Background Audio Loop**: We added the `audio` background mode key in `Info.plist`. The app plays a silent, infinite audio loop via `AVAudioPlayer` in the background, preventing iOS from suspending the WebSocket client connection.
-    3. **IP Persistence**: We modified `trust_store.json` to store `last_ip` and `last_port` for each paired peer. If UDP discovery fails, the reconnection loop tries direct TCP connections to these coordinates automatically.
-    4. **Notification Replacement ID**: To prevent sync alert notifications from cluttering the iOS Notification Center, we replaced the random UUID request identifier with a static string (`"airboard_clipboard_sync"`), ensuring only the latest synced message remains visible.
+### Service is stopped
 
----
+Allow notifications and exempt AirBoard from aggressive vendor battery optimization if the foreground network service is repeatedly killed. On some devices, the relevant setting is under Battery, Background usage, Auto-start, or Sleeping apps.
 
-## 🎨 Phases 11 - 15: Aurora Redesign, Subnets & Image Synchronization
+### Android build cannot install the NDK
 
-The final stages introduced a responsive UI redesign, subnet discovery adjustments, and multi-format pasteboard synchronization.
+The project expects NDK `25.1.8937393`. Ensure the Android SDK path is correct and enough free disk space is available:
 
-### Challenge 11.1: Asymmetric Network Discovery
-*   **Symptom**: Paired devices remained "Disconnected" because Device A discovered B, but B could not discover A. Because the tie-breaker rule (`local_id >= peer_id`) blocked A from initiating the connection, no connection was ever opened.
-*   **Root Cause**: One-way UDP packet routing on isolated local networks.
-*   **Resolution**: We removed the static lexicographical tie-breaker check from `connect_to_peer()`. Since duplicate connection attempts are already handled by thread-safe `ACTIVE_PEERS` registry checks, allowing either side to initiate the TCP socket resolved the connection block.
+```bash
+flutter doctor -v
+df -h
+sdkmanager "ndk;25.1.8937393"
+flutter build apk --debug
+```
 
-### Challenge 11.2: Multi-Platform Image Synchronization
-*   **Symptom**: Users wanted to sync images and screenshots, but our network protocol was built for text messages.
-*   **Root Cause**: Sending binary streams requires changing the underlying serialization libraries, which can break compatibility with older clients.
-*   **Resolution**:
-    1. We added image capture hooks on all platforms. If a user copies an image, the clipboard monitor encodes it to a Base64 PNG string (`data:image/png;base64,...`).
-    2. This text string is sent over the normal cryptographic transport.
-    3. When a peer receives the payload, if it detects the image header, it decodes the base64 string back into raw image bytes and writes it natively using the system's image clipboard APIs (`arboard::Clipboard::set_image` on Desktop and `UIPasteboard.general.image` on iOS).
+An incomplete NDK directory should be repaired through `sdkmanager`; do not commit machine-specific `android/local.properties` changes.
 
-### Challenge 11.3: Subnet Discovery Routing
-*   **Symptom**: Devices connected to different subnet masks (e.g. Wi-Fi repeaters) were isolated from UDP broadcasts.
-*   **Root Cause**: The global broadcast address (`255.255.255.255`) is blocked by many network repeaters and switches.
-*   **Resolution**: We modified the discovery module (`discovery/mod.rs`) to query the OS routing table for the active interface's IP, calculate the local subnet broadcast address (e.g. `192.168.1.255`), and broadcast to both the global and subnet-specific addresses.
+### Release signing fails
+
+Release builds are blocked unless `android/key.properties` points to a private keystore. This is intentional; release artifacts must never use the debug signing key. Follow the signing example in `README.md`. Do not commit the keystore or credentials.
+
+## iOS and iPadOS
+
+iOS supports foreground-oriented clipboard synchronization. It suspends arbitrary networking and clipboard polling after the app is backgrounded.
+
+- Accept the Local Network permission prompt.
+- Keep AirBoard open while pairing or actively syncing.
+- After returning to the app, allow a few seconds for discovery and reconnection.
+- Enable notifications if you want privacy-preserving arrival alerts.
+
+AirBoard does not play silent audio or claim continuous background clipboard access.
+
+### Apple build fails before compilation
+
+Install a complete Xcode release, select it, accept the license, and install CocoaPods:
+
+```bash
+sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -license accept
+sudo xcodebuild -runFirstLaunch
+pod --version
+flutter doctor -v
+```
+
+Then retry `flutter build macos` or `flutter build ipa --no-codesign`.
+
+## macOS
+
+The runner includes sandbox network-client and network-server entitlements. If discovery or clipboard access still fails:
+
+- allow AirBoard under System Settings > Network > Firewall;
+- restart the app after changing firewall permissions;
+- verify no other process occupies ports `45454` or `45455`;
+- ensure the full Xcode toolchain is selected for builds.
+
+## Linux
+
+The desktop clipboard backend requires a graphical clipboard environment. If it cannot read the clipboard, verify the process has access to the active X11 or Wayland session and that required Flutter desktop packages are installed.
+
+For Ubuntu/Debian Flutter desktop prerequisites:
+
+```bash
+sudo apt-get install clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev libsecret-1-0
+```
+
+AirBoard requires `flutter_secure_storage` v10 or newer on modern Linux toolchains. The older Linux backend bundled a JSON header that Clang 21 rejects under `-Werror` with `deprecated-literal-operator`. Pull the latest protocol-v2 testing branch instead of suppressing that compiler diagnostic.
+
+## Windows
+
+Allow AirBoard through Windows Defender Firewall on Private networks. A Public network profile may block discovery. Confirm that the Visual Studio Desktop development with C++ workload is installed before building.
+
+## Security-related errors
+
+These errors should not be bypassed:
+
+- **Fingerprint mismatch** — reject pairing and confirm you selected the intended device.
+- **Incompatible protocol** — rebuild all peers from the same revision.
+- **Invalid signature / authentication failed** — remove the untrusted connection; do not retry by blindly approving prompts.
+- **Replay or stale sequence** — restart synchronization only after confirming no legacy process is running.
+- **Payload too large** — reduce the text below 512 KiB.
+
+Malformed, unauthenticated, replayed, misaddressed, and oversized messages are rejected by design.
+
+## Collecting diagnostics safely
+
+Run:
+
+```bash
+flutter run -v
+RUST_BACKTRACE=1 cargo test --manifest-path rust/Cargo.toml
+```
+
+AirBoard logs clipboard lengths and state changes rather than clipboard previews, but logs may still contain device IDs, names, IP addresses, and error context. Review them before sharing publicly. Never post private keys, `key.properties`, keystores, platform credential-store exports, or clipboard contents.
+
+For protocol details and current limitations, see [TECHNICAL_DETAILS.md](TECHNICAL_DETAILS.md).

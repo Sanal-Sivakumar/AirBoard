@@ -23,21 +23,21 @@ class AB {
 
   // text
   static const text = Color(0xFFF4F6FB);
-  static Color get text2 => text.withOpacity(.62);
-  static Color get text3 => text.withOpacity(.38);
+  static Color get text2 => text.withValues(alpha: .62);
+  static Color get text3 => text.withValues(alpha: .38);
 
   // glass
-  static Color get glass => Colors.white.withOpacity(.055);
-  static Color get glassStrong => Colors.white.withOpacity(.085);
-  static Color get glassHi => Colors.white.withOpacity(.14);
-  static Color get stroke => Colors.white.withOpacity(.10);
-  static Color get strokeHi => Colors.white.withOpacity(.22);
+  static Color get glass => Colors.white.withValues(alpha: .055);
+  static Color get glassStrong => Colors.white.withValues(alpha: .085);
+  static Color get glassHi => Colors.white.withValues(alpha: .14);
+  static Color get stroke => Colors.white.withValues(alpha: .10);
+  static Color get strokeHi => Colors.white.withValues(alpha: .22);
 
   // mesh blob colors
   static const m1 = Color(0xFF3B6AD6);
   static const m2 = Color(0xFF7C3AED);
   static const m3 = Color(0xFF0EA5A5);
-  static Color get glow => accent.withOpacity(.55);
+  static Color get glow => accent.withValues(alpha: .55);
 
   // shape
   static const rLg = 26.0;
@@ -50,16 +50,21 @@ class AB {
   static const blur = 30.0;
 
   // ---- type ----
-  static TextStyle get h1 =>
-      GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w600, color: text, letterSpacing: -.3);
+  static TextStyle get h1 => GoogleFonts.inter(
+      fontSize: 22,
+      fontWeight: FontWeight.w600,
+      color: text,
+      letterSpacing: -.3);
   static TextStyle get title =>
       GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: text);
   static TextStyle get body =>
       GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: text);
-  static TextStyle get sub =>
-      GoogleFonts.inter(fontSize: 12.5, color: text2);
+  static TextStyle get sub => GoogleFonts.inter(fontSize: 12.5, color: text2);
   static TextStyle get label => GoogleFonts.inter(
-      fontSize: 11, fontWeight: FontWeight.w600, color: text3, letterSpacing: 1.4);
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: text3,
+      letterSpacing: 1.4);
   static TextStyle get mono =>
       GoogleFonts.jetBrainsMono(fontSize: 12.5, color: text);
   static TextStyle get monoSm =>

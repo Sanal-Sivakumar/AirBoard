@@ -1,48 +1,101 @@
-name: Deploy Static Showcase to Pages
+name: Build Windows Test App and Deploy Pages
 
 on:
+  # The testing branch updates the public test download without changing main.
   push:
-    branches: ["main"]
+    branches:
+      - main
+      - codex/protocol-v2-testing
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: pages
+  cancel-in-progress: true
 
 jobs:
-  deploy:
+  build-windows:
+    name: Build Windows protocol-v2 test bundle
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows release bundle
+        run: flutter build windows --release
+
+      - name: Package complete Windows bundle
+        shell: pwsh
+        run: |
+          # Flutter desktop apps need the executable, DLLs, and data directory.
+          Compress-Archive `
+            -Path "build/windows/x64/runner/Release/*" `
+            -DestinationPath "AirBoard-Windows-v2-test.zip" `
+            -CompressionLevel Optimal
+
+      - name: Upload Windows test artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AirBoard-Windows-v2-test
+          path: AirBoard-Windows-v2-test.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy-pages:
+    name: Publish website and Windows test download
+    needs: build-windows
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Setup Pages
+      - name: Download Windows bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: AirBoard-Windows-v2-test
+          path: dist/releases
+
+      - name: Set up Pages
         uses: actions/configure-pages@v5
 
-      - name: Create Static Distribution
+      - name: Create static distribution
+        shell: bash
         run: |
-          mkdir -p dist
+          # Publish documentation used by the website's source-build links.
           cp index.html dist/
+          cp README.md TECHNICAL_DETAILS.md TROUBLESHOOTING.md TESTING.md dist/
           cp -r web_showcase dist/
-          cp -r releases dist/
           if [ -d "assets" ]; then cp -r assets dist/; fi
           touch dist/.nojekyll
 
-      - name: Upload Pages Artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: dist
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4

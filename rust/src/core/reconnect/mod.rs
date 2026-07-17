@@ -1,6 +1,6 @@
-use tokio::time::{sleep, Duration};
 use crate::core::connection_registry::get_unconnected_peers;
 use crate::core::peer_manager::connect_to_peer;
+use tokio::time::{sleep, Duration};
 
 pub async fn start_reconnect_loop() {
     loop {
@@ -44,4 +44,3 @@ pub fn trigger_reconnect() {
         }
     }
 }
-

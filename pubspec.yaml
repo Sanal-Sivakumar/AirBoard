@@ -13,12 +13,14 @@ dependencies:
   flutter_rust_bridge: 2.12.0
   uuid: ^4.0.0
   rxdart: ^0.27.7
-  flutter_secure_storage: ^9.0.0
+  # v10 selects the maintained Linux backend that builds with modern Clang.
+  flutter_secure_storage: ^10.3.1
   freezed_annotation: ^2.4.4
   rust_lib_clipboard:
     path: rust_builder
   flutter_svg: ^2.1.0
   google_fonts: ^8.1.0
+  path_provider: ^2.1.5
 
 
 dev_dependencies:
@@ -44,5 +46,3 @@ flutter_launcher_icons:
     image_path: "assets/logo.png"
     icon_size: 256
   image_path: "assets/logo.png"
-
-

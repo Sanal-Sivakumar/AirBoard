@@ -46,7 +46,7 @@
                 <a href="#features">Features</a>
                 <a href="#requirements">Requirements</a>
                 <a href="#faq">FAQ</a>
-                <a href="#downloads" class="btn btn-primary nav-cta">Download</a>
+                <a href="#downloads" class="btn btn-primary nav-cta">Build v2</a>
             </div>
             <button class="nav-toggle" id="nav-toggle" aria-label="Toggle Navigation">
                 <span class="hamburger-bar"></span>
@@ -62,10 +62,10 @@
             <span class="hero-badge">Designed for Speed</span>
             <h1 class="hero-title">Copy here.<br><span class="text-gradient">Paste anywhere.</span></h1>
             <p class="hero-subtitle">
-                AirBoard is a free and open-source utility that synchronizes your clipboard across Android, iOS, iPadOS, macOS, Linux, and Windows devices in less than 50 milliseconds. Secure, offline-first, and completely automatic.
+                AirBoard is a free and open-source utility that synchronizes text clipboards directly across Android, iOS, iPadOS, macOS, Linux, and Windows devices on a local network. Transfers use mutually verified end-to-end encryption, with platform-specific background limits.
             </p>
             <div class="hero-actions">
-                <a href="#downloads" class="btn btn-primary btn-large">Download Beta</a>
+                <a href="#downloads" class="btn btn-primary btn-large">Build protocol v2</a>
                 <a href="#features" class="btn btn-secondary btn-large">See How It Works</a>
             </div>
         </div>
@@ -107,8 +107,8 @@
                         <div class="bento-icon bg-blue">
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
                         </div>
-                        <h3>Seamless Android Loopback</h3>
-                        <p>AirBoard runs a localized TCP loopback service directly on Android linked to the native background service. It bypasses OS clipboard reading bans automatically, keeping your connection alive and synchronizing your clips even when the app is completely swiped away.</p>
+                        <h3>Explicit Android Background Sync</h3>
+                        <p>AirBoard keeps its peer connection available through a foreground service. Android 10+ may require tapping <strong>Sync</strong> to send or <strong>Copy</strong> to apply clipboard text; AirBoard does not bypass operating-system clipboard protections.</p>
                     </div>
                     <div class="bento-visual visual-loopback">
                         <!-- Custom animated visual elements via CSS -->
@@ -286,69 +286,70 @@
         <div class="container">
             <div class="section-header fade-in text-center">
                 <span class="section-subtitle">Releases</span>
-                <h2 class="section-title">Get AirBoard today.</h2>
+                <h2 class="section-title">Build protocol v2.</h2>
             </div>
 
             <div class="downloads-grid">
                 <!-- Android Download Card -->
                 <div class="download-card fade-in">
                     <div class="download-platform">Android</div>
-                    <div class="download-meta">Release Build (APK) • Version 1.0.0</div>
-                    <a href="../releases/airboard-android.apk" class="btn btn-primary download-btn" download data-size="24.9 MB">
+                    <div class="download-meta">Legacy v1 artifact retired for security</div>
+                    <a href="../README.md" class="btn btn-primary download-btn">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        <span>Download APK</span>
+                        <span>Build from source</span>
                     </a>
                 </div>
 
                 <!-- Linux Download Card -->
                 <div class="download-card fade-in">
                     <div class="download-platform">Linux</div>
-                    <div class="download-meta">Release Bundle (ZIP) • Version 1.0.0</div>
-                    <a href="../releases/airboard-linux.zip" class="btn btn-secondary download-btn" download data-size="12.3 MB">
+                    <div class="download-meta">Legacy v1 artifact retired for security</div>
+                    <a href="../README.md" class="btn btn-secondary download-btn">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        <span>Download ZIP</span>
+                        <span>Build from source</span>
                     </a>
                 </div>
 
                 <!-- iOS & iPadOS Download Card -->
                 <div class="download-card fade-in">
                     <div class="download-platform">iOS & iPadOS</div>
-                    <div class="download-meta">Beta App (IPA) • Sideload Required</div>
-                    <a href="../releases/AirBoard-ipadosios.ipa" class="btn btn-secondary download-btn" download data-size="26.5 MB">
+                    <div class="download-meta">Legacy v1 artifact retired for security</div>
+                    <a href="../README.md" class="btn btn-secondary download-btn">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        <span>Download IPA</span>
+                        <span>Build from source</span>
                     </a>
                 </div>
 
                 <!-- macOS Download Card -->
                 <div class="download-card fade-in">
                     <div class="download-platform">macOS</div>
-                    <div class="download-meta">Release Bundle (ZIP) • Version 1.0.0</div>
-                    <a href="../releases/airboard-macos.zip" class="btn btn-secondary download-btn" download data-size="23.8 MB">
+                    <div class="download-meta">Legacy v1 artifact retired for security</div>
+                    <a href="../README.md" class="btn btn-secondary download-btn">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        <span>Download ZIP</span>
+                        <span>Build from source</span>
                     </a>
                 </div>
 
                 <!-- Windows Download Card -->
                 <div class="download-card fade-in">
                     <div class="download-platform">Windows</div>
-                    <div class="download-meta">Release Build (ZIP) • Version 1.0.0</div>
-                    <a href="../releases/airboard-windows.zip" class="btn btn-secondary download-btn" download data-size="15.2 MB">
+                    <div class="download-meta">Protocol v2 • Testing only • Built by GitHub Actions</div>
+                    <a href="../releases/AirBoard-Windows-v2-test.zip" class="btn btn-secondary download-btn" download>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        <span>Download ZIP</span>
+                        <span>Download Windows test build</span>
                     </a>
                 </div>
             </div>
 
             <div class="downloads-notice fade-in text-center">
-                <p class="sideload-hint">Need help installing on iOS or macOS? <a href="#sideload-guide">Read our Installation & Sideloading Guide below</a>.</p>
+                <p class="sideload-hint">The Windows download is an unverified protocol-v2 test build. Test it before trusting sensitive clipboard data. Existing protocol-v1 packages are retired and must not be mixed with v2 clients. See the <a href="../TESTING.md">device test plan</a>.</p>
             </div>
         </div>
     </section>
 
     <!-- Installation & Sideloading Guide -->
-    <section id="sideload-guide" class="sideload-section container">
+    <!-- Retired with protocol-v1 artifacts: unsigned-binary bypass instructions are intentionally hidden. -->
+    <section id="sideload-guide" class="sideload-section container" hidden>
         <div class="sideload-card-container fade-in">
             <span class="section-subtitle">Installation Guide</span>
             <h2 class="section-title">Sideloading & Security Bypass</h2>
@@ -515,7 +516,7 @@
                         <span class="faq-icon">+</span>
                     </button>
                     <div class="faq-answer">
-                        <p>Clipboard synchronization is virtually instantaneous, taking less than 50 milliseconds. Because data transfers directly between devices over local sockets rather than routing through the internet to a remote server, there is zero lag or latency.</p>
+                        <p>Clipboard synchronization is normally quick on a healthy LAN, but latency depends on the network, device scheduling, and each platform's clipboard restrictions. AirBoard does not route clipboard data through a cloud service.</p>
                     </div>
                 </div>
 
@@ -526,7 +527,7 @@
                         <span class="faq-icon">+</span>
                     </button>
                     <div class="faq-answer">
-                        <p>All communications are encrypted end-to-end. Device identity key pairs are generated locally using Ed25519 signing. Every sync session is established through an ephemeral X25519 Diffie-Hellman cryptographic handshake, and data packets are secured using ChaCha20-Poly1305 symmetric encryption. Only paired devices with matching keys can decrypt your data.</p>
+                        <p>Protocol v2 uses mutually verified Ed25519 identities, an ephemeral X25519 handshake, HKDF-SHA-256 key derivation, and ChaCha20-Poly1305 authenticated encryption. Users must compare both full fingerprints during pairing; blindly approving a prompt defeats initial authentication.</p>
                     </div>
                 </div>
 
@@ -537,7 +538,7 @@
                         <span class="faq-icon">+</span>
                     </button>
                     <div class="faq-answer">
-                        <p>AirBoard is highly optimized for power efficiency. On Android, it uses a lightweight local TCP loopback service, while on iOS/macOS, it employs standard low-power OS timers and passive socket listening. It remains idle until a local copy event is triggered, ensuring near-zero battery drain.</p>
+                        <p>Battery use varies by platform and network conditions. Android uses a foreground networking service; iOS pauses networking and clipboard polling when the app is suspended, then reconnects after returning to the foreground.</p>
                     </div>
                 </div>
 

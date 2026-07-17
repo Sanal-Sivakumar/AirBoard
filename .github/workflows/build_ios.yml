@@ -1,30 +1,36 @@
-name: Build iOS IPA (Unsigned)
+name: Build iPadOS and iOS Test IPA
 
 on:
   push:
     branches:
       - main
+      - codex/protocol-v2-testing
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: ios-test-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    name: Build iOS
+    name: Build unsigned iPadOS/iOS artifact
     runs-on: macos-latest
+    timeout-minutes: 45
 
     steps:
-      - name: Checkout repository
+      - name: Check out source
         uses: actions/checkout@v4
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
           cache: true
 
-      - name: Set up Rust
+      - name: Set up Rust for physical Apple devices
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-ios
@@ -32,17 +38,27 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
-      - name: Build Flutter iOS (Unsigned)
+      - name: Verify Dart and Flutter code
+        run: |
+          # Fail before the expensive Apple build if source checks regress.
+          flutter analyze
+          flutter test
+
+      - name: Build unsigned physical-device app
         run: flutter build ios --release --no-codesign
 
-      - name: Package IPA
+      - name: Package unsigned IPA container
+        shell: bash
         run: |
+          # Sideloading software must sign this app before iPadOS can install it.
           mkdir -p Payload
-          mv build/ios/iphoneos/Runner.app Payload/
-          zip -r AirBoard-unsigned.ipa Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/AirBoard.app
+          zip -qry AirBoard-iPadOS-v2-unsigned-test.ipa Payload
 
-      - name: Upload IPA Artifact
+      - name: Upload unsigned IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AirBoard-unsigned-ipa
-          path: AirBoard-unsigned.ipa
+          name: AirBoard-iPadOS-v2-unsigned-test
+          path: AirBoard-iPadOS-v2-unsigned-test.ipa
+          if-no-files-found: error
+          retention-days: 14

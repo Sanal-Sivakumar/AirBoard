@@ -18,8 +18,7 @@ class SectionTitle extends StatelessWidget {
         children: [
           Text(title.toUpperCase(), style: AB.label),
           if (count != null)
-            Text('$count',
-                style: AB.label.copyWith(color: AB.accent)),
+            Text('$count', style: AB.label.copyWith(color: AB.accent)),
         ],
       ),
     );
@@ -39,9 +38,9 @@ class StatusBadge extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
         decoration: BoxDecoration(
-          color: AB.ok.withOpacity(.10),
+          color: AB.ok.withValues(alpha: .10),
           borderRadius: BorderRadius.circular(AB.rPill),
-          border: Border.all(color: AB.ok.withOpacity(.28)),
+          border: Border.all(color: AB.ok.withValues(alpha: .28)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           const Icon(Icons.check_rounded, size: 14, color: AB.ok),
@@ -59,9 +58,9 @@ class StatusBadge extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
         decoration: BoxDecoration(
-          color: AB.warn.withOpacity(.10),
+          color: AB.warn.withValues(alpha: .10),
           borderRadius: BorderRadius.circular(AB.rPill),
-          border: Border.all(color: AB.warn.withOpacity(.30)),
+          border: Border.all(color: AB.warn.withValues(alpha: .30)),
         ),
         child: Text(compact ? 'Pair' : 'Pair device',
             style: AB.sub.copyWith(
@@ -86,16 +85,16 @@ class _MiniTag extends StatelessWidget {
         border: Border.all(color: accent ? AB.strokeHi : AB.stroke),
       ),
       child: Text(label.toUpperCase(),
-          style: GoogleFontsFallback.tag.copyWith(
-              color: accent ? AB.accent : AB.text3)),
+          style: GoogleFontsFallback.tag
+              .copyWith(color: accent ? AB.accent : AB.text3)),
     );
   }
 }
 
 // tiny helper to avoid importing google_fonts here just for one style
 class GoogleFontsFallback {
-  static const tag = TextStyle(
-      fontSize: 9.5, fontWeight: FontWeight.w700, letterSpacing: .6);
+  static const tag =
+      TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, letterSpacing: .6);
 }
 
 /// A device row (paired or discovered). Works on desktop & mobile.
@@ -131,13 +130,11 @@ class DeviceTile extends StatelessWidget {
                 Row(children: [
                   Flexible(
                     child: Text(device.name,
-                        style: AB.title
-                            .copyWith(fontSize: compact ? 14.5 : 15),
+                        style: AB.title.copyWith(fontSize: compact ? 14.5 : 15),
                         overflow: TextOverflow.ellipsis),
                   ),
                   if (device.tag != null)
-                    _MiniTag(device.tag!,
-                        accent: device.tag != 'idle'),
+                    _MiniTag(device.tag!, accent: device.tag != 'idle'),
                 ]),
                 const SizedBox(height: 2),
                 Text(device.subtitle,
@@ -147,8 +144,7 @@ class DeviceTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          StatusBadge(
-              paired: device.paired, onPair: onPair, compact: compact),
+          StatusBadge(paired: device.paired, onPair: onPair, compact: compact),
           if (device.paired && onUnpair != null) ...[
             const SizedBox(width: 4),
             _IconBtn(icon: Icons.delete_outline_rounded, onTap: onUnpair!),
@@ -171,8 +167,8 @@ class DeviceTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AB.stroke),
           ),
-          child: Icon(device.kind.icon,
-              size: compact ? 20 : 21, color: AB.accent),
+          child:
+              Icon(device.kind.icon, size: compact ? 20 : 21, color: AB.accent),
         ),
         if (device.online)
           Positioned(
@@ -186,7 +182,7 @@ class DeviceTile extends StatelessWidget {
                 color: AB.ok,
                 border: Border.all(color: AB.bg0, width: 2),
                 boxShadow: [
-                  BoxShadow(color: AB.ok.withOpacity(.8), blurRadius: 8)
+                  BoxShadow(color: AB.ok.withValues(alpha: .8), blurRadius: 8)
                 ],
               ),
             ),
@@ -219,13 +215,13 @@ class _IconBtnState extends State<_IconBtn> {
           width: 34,
           height: 34,
           decoration: BoxDecoration(
-            color: _h ? AB.danger.withOpacity(.12) : Colors.transparent,
+            color: _h ? AB.danger.withValues(alpha: .12) : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-                color: _h ? AB.danger.withOpacity(.25) : Colors.transparent),
+                color:
+                    _h ? AB.danger.withValues(alpha: .25) : Colors.transparent),
           ),
-          child: Icon(widget.icon,
-              size: 17, color: _h ? AB.danger : AB.text3),
+          child: Icon(widget.icon, size: 17, color: _h ? AB.danger : AB.text3),
         ),
       ),
     );
@@ -258,7 +254,8 @@ class ClipTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: AB.stroke),
             ),
-            child: Icon(item.type.icon, size: compact ? 16 : 17, color: AB.accent),
+            child:
+                Icon(item.type.icon, size: compact ? 16 : 17, color: AB.accent),
           ),
           SizedBox(width: compact ? 11 : 14),
           Expanded(
@@ -275,8 +272,8 @@ class ClipTile extends StatelessWidget {
                     compact
                         ? '${item.source} · ${item.time}'
                         : 'from ${item.source} · ${item.time}',
-                    style: AB.sub
-                        .copyWith(color: AB.text3, fontSize: compact ? 10.5 : 11.5)),
+                    style: AB.sub.copyWith(
+                        color: AB.text3, fontSize: compact ? 10.5 : 11.5)),
               ],
             ),
           ),

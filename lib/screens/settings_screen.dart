@@ -56,7 +56,8 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 6),
                   TextField(
                     controller: nameController,
-                    enabled: !isSyncEnabled, // Prevent changing name while engine is active
+                    enabled:
+                        !isSyncEnabled, // Prevent changing name while engine is active
                     style: AB.h1.copyWith(fontSize: 17),
                     decoration: InputDecoration(
                       isDense: true,
@@ -105,13 +106,12 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _metricRow(BuildContext context, String k, String v, bool copyable, {bool last = false}) {
+  Widget _metricRow(BuildContext context, String k, String v, bool copyable,
+      {bool last = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       decoration: BoxDecoration(
-        border: last
-            ? null
-            : Border(bottom: BorderSide(color: AB.stroke)),
+        border: last ? null : Border(bottom: BorderSide(color: AB.stroke)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -179,12 +179,15 @@ class _CollapsibleLogConsoleState extends State<_CollapsibleLogConsole> {
                         onTap: widget.onClear,
                         child: Text(
                           'CLEAR',
-                          style: AB.label.copyWith(color: AB.danger, fontSize: 10),
+                          style:
+                              AB.label.copyWith(color: AB.danger, fontSize: 10),
                         ),
                       ),
                     const SizedBox(width: 12),
                     Icon(
-                      _expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                      _expanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
                       size: 16,
                       color: AB.text3,
                     ),
@@ -215,7 +218,8 @@ class _CollapsibleLogConsoleState extends State<_CollapsibleLogConsole> {
                             itemCount: widget.logs.length,
                             itemBuilder: (context, index) {
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 2.0),
                                 child: Text(
                                   widget.logs[index],
                                   style: AB.monoSm.copyWith(

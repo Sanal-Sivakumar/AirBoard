@@ -1,0 +1,97 @@
+name: Verify Protocol v2
+
+on:
+  push:
+    branches:
+      - main
+      - codex/protocol-v2-testing
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Rust checks (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Check formatting
+        run: cargo fmt --manifest-path rust/Cargo.toml -- --check
+
+      - name: Run Rust tests
+        run: cargo test --manifest-path rust/Cargo.toml
+
+      - name: Reject Rust warnings
+        run: cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
+
+  flutter:
+    name: Flutter checks (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Install Linux secure-storage build dependency
+        if: runner.os == 'Linux'
+        run: |
+          # Flutter needs GTK headers; AirBoard also stores identity material
+          # through the desktop Secret Service.
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            liblzma-dev \
+            libsecret-1-dev \
+            libsecret-1-0
+
+      - name: Analyze application
+        run: flutter analyze
+
+      - name: Run widget tests
+        run: flutter test
+
+      - name: Build Linux desktop application
+        if: runner.os == 'Linux'
+        run: |
+          # This catches native plugin and modern-Clang compatibility failures.
+          flutter build linux --debug
